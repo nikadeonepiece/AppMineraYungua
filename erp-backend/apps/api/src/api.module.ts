@@ -21,6 +21,12 @@ import { RegimenLaboralModule } from './erp/personal/regimen-laboral/regimen-lab
 import { TurnoTrabajoModule } from './erp/personal/turno-trabajo/turno-trabajo.module';
 import { PersonalModule } from './erp/personal/personal/personal.module';
 import { MarcacionAsistenciaModule } from './erp/marcacion-asistencia/marcacion-asistencia.module';
+import { ComunidadCampesinaModule } from './erp/comuneros/comunidad-campesina/comunidad-campesina.module';
+import { CaserioModule } from './erp/comuneros/caserio/caserio.module';
+import { ComuneroModule } from './erp/comuneros/comunero/comunero.module';
+import { ParcelaModule } from './erp/comuneros/parcela/parcela.module';
+import { CertificadoPosesionModule } from './erp/comuneros/certificado-posesion/certificado-posesion.module';
+import { AsambleaModule } from './erp/comuneros/asamblea/asamblea.module';
 
 @Module({
   imports: [
@@ -39,6 +45,12 @@ import { MarcacionAsistenciaModule } from './erp/marcacion-asistencia/marcacion-
     TurnoTrabajoModule,
     PersonalModule,
     MarcacionAsistenciaModule,
+    ComunidadCampesinaModule,
+    CaserioModule,
+    ComuneroModule,
+    ParcelaModule,
+    CertificadoPosesionModule,
+    AsambleaModule,
   ],
   controllers: [ApiController],
   providers: [ApiService],

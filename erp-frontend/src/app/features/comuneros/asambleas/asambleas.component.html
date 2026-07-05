@@ -1,0 +1,100 @@
+<div class="container-fluid p-3 p-md-4 form-wrapper mx-auto" style="max-width: var(--erp-max-width);">
+<div class="card-pro table-pro-container mb-3 p-0 p-md-3 animate__animated animate__fadeInUp">
+<app-table-pro titulo="Asambleas" subtitulo="Programación de asambleas comunales por caserío" btnText="NUEVA ASAMBLEA"
+    [showAddBtn]="perms.hasPermission('crear_asamblea')" [loading]="crud.tableLoading()"
+    [data]="crud.resource().data" [meta]="crud.resource().meta"
+    (add)="abrirModal(modalFormulario)" (pageChange)="crud.cambiarPagina($event)" (search)="onSearch($event)">
+
+    <thead thead class="text-uppercase text-muted border-bottom table-header-erp">
+        <tr>
+            <th class="ps-3 fw-bold border-0" style="width: 80px;">ID</th>
+            <th class="fw-bold border-0">TÍTULO</th>
+            <th class="fw-bold border-0">CASERÍOS</th>
+            <th class="fw-bold border-0">FECHA</th>
+            <th class="fw-bold border-0 text-center">ESTADO</th>
+            <th class="text-center border-0" style="width: 90px;">ACCIONES</th>
+        </tr>
+    </thead>
+    <tbody tbody>
+        @for (item of crud.resource().data; track item.id_asamblea) {
+            <tr class="main-row align-middle fila-animada">
+                <td class="ps-3 py-3"><div class="fw-bold text-primary-erp">#{{ item.id_asamblea }}</div></td>
+                <td class="fw-bold text-erp text-uppercase">{{ item.titulo || '—' }}</td>
+                <td class="text-muted-erp text-uppercase">{{ item.nombre_caserios }}</td>
+                <td class="text-muted-erp">{{ item.fecha ? (item.fecha | date:'dd/MM/yyyy') : '—' }}</td>
+                <td class="text-center">
+                    @switch (item.estado) {
+                        @case ('PROGRAMADA') { <app-status-badge variant="warning">PROGRAMADA</app-status-badge> }
+                        @case ('REALIZADA') { <app-status-badge variant="primary">REALIZADA</app-status-badge> }
+                        @case ('CERRADA') { <app-status-badge variant="success">CERRADA</app-status-badge> }
+                    }
+                </td>
+                <td class="text-center">
+                    @if (perms.hasPermission('crear_asamblea')) {
+                        <button type="button" class="btn-action-edit" (click)="abrirModal(modalFormulario, item)">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                    }
+                </td>
+            </tr>
+        } @empty {
+            <tr><td colspan="6" class="text-center py-5 text-muted-erp">No hay asambleas registradas.</td></tr>
+        }
+    </tbody>
+</app-table-pro>
+
+<ng-template #modalFormulario let-modal>
+    <div class="modal-header border-bottom-dashed-erp bg-erp px-4 py-3">
+        <h5 class="modal-title fw-bold text-erp">
+            <div class="icon-badge me-2"><i class="bi bi-megaphone-fill"></i></div>
+            {{ crud.editingId() ? 'Editar Asamblea' : 'Nueva Asamblea' }}
+        </h5>
+        <button type="button" class="btn-close shadow-none" (click)="modal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body p-4 bg-card">
+        <form [formGroup]="form" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Caseríos <span class="req-star">*</span></label>
+                <ng-select class="ng-select-sm" [items]="caserios()" bindLabel="nombre" bindValue="id_caserio"
+                           formControlName="id_caserios" placeholder="Seleccionar uno o varios..." appendTo="body"
+                           notFoundText="Sin resultados" [multiple]="true" [closeOnSelect]="false">
+                </ng-select>
+                <app-form-error [control]="form.get('id_caserios')"></app-form-error>
+            </div>
+            <div class="col-md-6">
+                <app-single-date-picker [formGroup]="form" controlName="fecha" label="Fecha"></app-single-date-picker>
+            </div>
+
+            <div class="col-md-8">
+                <label class="form-label">Título</label>
+                <input type="text" class="form-control text-uppercase" formControlName="titulo"
+                       oninput="this.value = this.value.toUpperCase()">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Estado</label>
+                <select class="form-select form-select-sm" formControlName="estado">
+                    <option value="PROGRAMADA">Programada</option>
+                    <option value="REALIZADA">Realizada</option>
+                    <option value="CERRADA">Cerrada</option>
+                </select>
+            </div>
+        </form>
+
+        @if (crud.editingId()) {
+            <div class="text-muted-erp text-xs-erp mt-3">
+                <i class="bi bi-info-circle me-1"></i>
+                Para registrar la asistencia de comuneros a esta asamblea, ve al módulo "Asistencia de Asambleas".
+            </div>
+        }
+    </div>
+
+    <div class="modal-footer bg-erp border-top-dashed-erp d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-soft-neutral" (click)="modal.dismiss()">CERRAR</button>
+        <button type="button" class="btn btn-primary" (click)="guardar()" [disabled]="form.invalid || crud.tableLoading()">
+            <i class="bi bi-save me-1"></i> GUARDAR
+        </button>
+    </div>
+</ng-template>
+</div>
+</div>

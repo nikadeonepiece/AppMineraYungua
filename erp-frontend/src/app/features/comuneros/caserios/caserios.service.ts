@@ -4,9 +4,9 @@ import { environment } from 'src/environments/environment';
 import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
-export class TrabajadoresService {
+export class CaseriosService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrlGestion}/personal`;
+  private apiUrl = `${environment.apiUrlGestion}/comuneros/caserios`;
 
   findAll(page: number, limit: number, search: string): Observable<any> {
     let params = new HttpParams().set('page', page).set('limit', limit);
@@ -16,13 +16,6 @@ export class TrabajadoresService {
 
   findOne(id: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/${id}`);
-  }
-
-  buscarComuneros(search: string, idPersonalActual?: number, idComuneroActual?: number): Observable<any> {
-    let params = new HttpParams().set('search', search || '');
-    if (idPersonalActual) params = params.set('id_personal_actual', idPersonalActual);
-    if (idComuneroActual) params = params.set('id_comunero_actual', idComuneroActual);
-    return this.http.get(`${this.apiUrl}/buscar-comunero`, { params });
   }
 
   create(data: any): Observable<any> {

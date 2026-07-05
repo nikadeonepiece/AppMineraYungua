@@ -1,0 +1,85 @@
+<app-table-pro titulo="Certificados de Posesión" subtitulo="Certificados emitidos sobre parcelas" btnText="NUEVO CERTIFICADO"
+    [showAddBtn]="perms.hasPermission('crear_comunero')" [loading]="crud.tableLoading()"
+    [data]="crud.resource().data" [meta]="crud.resource().meta"
+    (add)="abrirModal(modalFormulario)" (pageChange)="crud.cambiarPagina($event)" (search)="onSearch($event)">
+
+    <thead thead class="text-uppercase text-muted border-bottom table-header-erp">
+        <tr>
+            <th class="ps-3 fw-bold border-0" style="width: 80px;">ID</th>
+            <th class="fw-bold border-0">COMUNERO</th>
+            <th class="fw-bold border-0">PARCELA</th>
+            <th class="fw-bold border-0">FECHA DE EMISIÓN</th>
+            <th class="text-center border-0" style="width: 120px;">ACCIONES</th>
+        </tr>
+    </thead>
+    <tbody tbody>
+        @for (item of crud.resource().data; track item.id_certificado) {
+            <tr class="main-row align-middle fila-animada">
+                <td class="ps-3 py-3"><div class="fw-bold text-primary-erp">#{{ item.id_certificado }}</div></td>
+                <td class="fw-bold text-erp text-uppercase">
+                    {{ item.nombre_comunero }}
+                    <div class="text-muted-erp text-xs-erp font-numeric-erp">{{ item.dni }}</div>
+                </td>
+                <td class="text-muted-erp text-uppercase">{{ item.denominacion_parcela || '—' }}</td>
+                <td class="text-muted-erp">{{ item.fecha_emision ? (item.fecha_emision | date:'dd/MM/yyyy') : '—' }}</td>
+                <td class="text-center">
+                    <div class="d-flex justify-content-center gap-2">
+                        @if (perms.hasPermission('editar_comunero')) {
+                            <button type="button" class="btn-action-edit" (click)="abrirModal(modalFormulario, item)">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                        }
+                        @if (perms.hasPermission('eliminar_comunero')) {
+                            <button type="button" class="btn-action-delete" (click)="eliminar(item)">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        }
+                    </div>
+                </td>
+            </tr>
+        } @empty {
+            <tr><td colspan="5" class="text-center py-5 text-muted-erp">No hay certificados de posesión registrados.</td></tr>
+        }
+    </tbody>
+</app-table-pro>
+
+<ng-template #modalFormulario let-modal>
+    <div class="modal-header border-bottom-dashed-erp bg-erp px-4 py-3">
+        <h5 class="modal-title fw-bold text-erp">
+            <div class="icon-badge me-2"><i class="bi bi-file-earmark-check-fill"></i></div>
+            {{ crud.editingId() ? 'Editar Certificado de Posesión' : 'Nuevo Certificado de Posesión' }}
+        </h5>
+        <button type="button" class="btn-close shadow-none" (click)="modal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body p-4 bg-card">
+        <form [formGroup]="form" class="row g-3">
+            <div class="col-12">
+                <label class="form-label">Comunero <span class="req-star">*</span></label>
+                <ng-select class="ng-select-sm" [items]="comuneros()" bindLabel="apellidos_nombres" bindValue="id_comunero"
+                           formControlName="id_comunero" placeholder="Seleccionar..." appendTo="body"
+                           notFoundText="Sin resultados" [clearable]="false">
+                </ng-select>
+                <app-form-error [control]="form.get('id_comunero')"></app-form-error>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Parcela <span class="req-star">*</span></label>
+                <ng-select class="ng-select-sm" [items]="parcelas()" bindLabel="etiqueta" bindValue="id_parcela"
+                           formControlName="id_parcela" placeholder="Seleccionar..." appendTo="body"
+                           notFoundText="Sin resultados" [clearable]="false">
+                </ng-select>
+                <app-form-error [control]="form.get('id_parcela')"></app-form-error>
+            </div>
+            <div class="col-md-6">
+                <app-single-date-picker [formGroup]="form" controlName="fecha_emision" label="Fecha de emisión"></app-single-date-picker>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal-footer bg-erp border-top-dashed-erp d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-soft-neutral" (click)="modal.dismiss()">CANCELAR</button>
+        <button type="button" class="btn btn-primary" (click)="guardar()" [disabled]="form.invalid || crud.tableLoading()">
+            <i class="bi bi-save me-1"></i> GUARDAR
+        </button>
+    </div>
+</ng-template>

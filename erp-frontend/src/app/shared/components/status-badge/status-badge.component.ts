@@ -9,7 +9,7 @@ export type BadgeVariant = 'success' | 'danger' | 'warning' | 'primary' | 'secon
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <span class="badge-erp" [ngClass]="'badge-' + variant"><ng-content></ng-content></span>
+    <span class="badge-erp" [ngClass]="'badge-' + variant + '-erp'"><ng-content></ng-content></span>
   `
 })
 export class StatusBadgeComponent {

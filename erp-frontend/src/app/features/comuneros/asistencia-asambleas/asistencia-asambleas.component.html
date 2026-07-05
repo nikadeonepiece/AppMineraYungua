@@ -1,0 +1,142 @@
+<div class="container-fluid p-3 p-md-4 form-wrapper mx-auto" style="max-width: var(--erp-max-width);">
+<div class="card-pro table-pro-container mb-3 p-0 p-md-3 animate__animated animate__fadeInUp">
+<app-table-pro titulo="Asistencia de Asambleas" subtitulo="Registro de asistencia (firma) de comuneros por asamblea"
+    [showAddBtn]="false" [loading]="crud.tableLoading()"
+    [data]="crud.resource().data" [meta]="crud.resource().meta"
+    (pageChange)="crud.cambiarPagina($event)" (search)="onSearch($event)">
+
+    <thead thead class="text-uppercase text-muted border-bottom table-header-erp">
+        <tr>
+            <th class="ps-3 fw-bold border-0" style="width: 80px;">ID</th>
+            <th class="fw-bold border-0">TÍTULO</th>
+            <th class="fw-bold border-0">CASERÍOS</th>
+            <th class="fw-bold border-0">FECHA</th>
+            <th class="fw-bold border-0 text-center">ESTADO</th>
+            <th class="text-center border-0" style="width: 120px;">ASISTENCIA</th>
+        </tr>
+    </thead>
+    <tbody tbody>
+        @for (item of crud.resource().data; track item.id_asamblea) {
+            <tr class="main-row align-middle fila-animada">
+                <td class="ps-3 py-3"><div class="fw-bold text-primary-erp">#{{ item.id_asamblea }}</div></td>
+                <td class="fw-bold text-erp text-uppercase">{{ item.titulo || '—' }}</td>
+                <td class="text-muted-erp text-uppercase">{{ item.nombre_caserios }}</td>
+                <td class="text-muted-erp">{{ item.fecha ? (item.fecha | date:'dd/MM/yyyy') : '—' }}</td>
+                <td class="text-center">
+                    @switch (item.estado) {
+                        @case ('PROGRAMADA') { <app-status-badge variant="warning">PROGRAMADA</app-status-badge> }
+                        @case ('REALIZADA') { <app-status-badge variant="primary">REALIZADA</app-status-badge> }
+                        @case ('CERRADA') { <app-status-badge variant="success">CERRADA</app-status-badge> }
+                    }
+                </td>
+                <td class="text-center">
+                    @if (perms.hasPermission('marcar_asistencia_asamblea')) {
+                        <button type="button" class="btn-action-edit" (click)="abrirModalAsistencia(modalAsistencia, item)">
+                            <i class="bi bi-clipboard2-check-fill"></i>
+                        </button>
+                    }
+                </td>
+            </tr>
+        } @empty {
+            <tr><td colspan="6" class="text-center py-5 text-muted-erp">No hay asambleas registradas.</td></tr>
+        }
+    </tbody>
+</app-table-pro>
+
+<ng-template #modalAsistencia let-modal>
+    <div class="modal-header border-bottom-dashed-erp bg-erp px-4 py-3">
+        <h5 class="modal-title fw-bold text-erp">
+            <div class="icon-badge me-2"><i class="bi bi-clipboard2-check-fill"></i></div>
+            Asistencia — {{ asambleaActiva()?.titulo || asambleaActiva()?.nombre_caserios }}
+        </h5>
+        <button type="button" class="btn-close shadow-none" (click)="modal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body p-4 bg-card">
+        <div class="form-check form-switch mb-3">
+            <input type="checkbox" class="form-check-input" id="mostrarTodosComuneros"
+                   [checked]="mostrarTodos()" (change)="mostrarTodos.set(!mostrarTodos())">
+            <label class="form-check-label text-xs-erp" for="mostrarTodosComuneros">
+                Mostrar todos los comuneros (no solo los de los caseríos de esta asamblea)
+            </label>
+        </div>
+
+        <form [formGroup]="asistenciaForm" class="row g-2 align-items-end mb-1">
+            <div class="col-md-5">
+                <label class="form-label">Comunero</label>
+                <ng-select class="ng-select-sm" [items]="opcionesComunero()" bindLabel="apellidos_nombres" bindValue="id_comunero"
+                           formControlName="id_comunero" placeholder="Seleccionar..." appendTo="body"
+                           notFoundText="Sin resultados" [clearable]="false">
+                </ng-select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Método</label>
+                <select class="form-select form-select-sm" formControlName="metodo">
+                    <option value="MANUAL">Manual</option>
+                    <option value="QR">QR</option>
+                    <option value="FACIAL">Facial</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="firmoAsistencia" formControlName="firmo">
+                    <label class="form-check-label" for="firmoAsistencia">Firmó</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-soft-neutral w-100" (click)="marcarAsistencia()"
+                        [disabled]="asistenciaForm.invalid || guardandoAsistencia()">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+        </form>
+
+        @if (comuneroFueraDeAlcance()) {
+            <div class="text-warning-erp text-xs-erp mb-3">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                Este comunero no pertenece a ninguno de los caseríos convocados a esta asamblea — no le "toca" por padrón, verifica antes de registrar su asistencia.
+            </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead class="text-uppercase text-muted-erp text-xs-erp">
+                    <tr>
+                        <th>Comunero</th>
+                        <th class="text-center">Firmó</th>
+                        <th>Método</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (a of asistencia(); track a.id_asistencia) {
+                        <tr>
+                            <td>{{ a.apellidos_nombres }} <span class="text-muted-erp text-xs-erp">({{ a.dni }})</span></td>
+                            <td class="text-center">
+                                @if (a.firmo) {
+                                    <app-status-badge variant="success">SÍ</app-status-badge>
+                                } @else {
+                                    <app-status-badge variant="danger">NO</app-status-badge>
+                                }
+                            </td>
+                            <td class="text-uppercase">{{ a.metodo }}</td>
+                            <td class="text-end">
+                                <button type="button" class="btn-action-delete" (click)="quitarAsistencia(a)">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    } @empty {
+                        <tr><td colspan="4" class="text-center text-muted-erp py-3">Sin asistencia registrada.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-erp border-top-dashed-erp d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-soft-neutral" (click)="modal.dismiss()">CERRAR</button>
+    </div>
+</ng-template>
+</div>
+</div>

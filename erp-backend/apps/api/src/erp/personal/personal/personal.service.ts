@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { AuditoriaService } from '@app/common';
@@ -11,11 +11,13 @@ const SELECT_LISTADO = `
     p.id_area, a.nombre AS nombre_area,
     p.id_cargo, c.nombre AS nombre_cargo,
     p.id_regimen, r.nombre AS nombre_regimen,
+    p.id_comunero, cm.apellidos_nombres AS nombre_comunero,
     p.centro_trabajo, p.consentimiento_biometrico
   FROM personal p
   LEFT JOIN area a ON a.id_area = p.id_area AND a.estado_registro = 'ACTIVO'
   LEFT JOIN cargo c ON c.id_cargo = p.id_cargo AND c.estado_registro = 'ACTIVO'
   LEFT JOIN regimen_laboral r ON r.id_regimen = p.id_regimen AND r.estado_registro = 'ACTIVO'
+  LEFT JOIN comunero cm ON cm.id_comunero = p.id_comunero
 `;
 
 @Injectable()
@@ -61,6 +63,34 @@ export class PersonalService {
     return { data, meta: { total: Number(totalRes[0]?.total || 0), page, limit } };
   }
 
+  async buscarComuneros(search: string, idPersonalActual?: number, idComuneroActual?: number) {
+    const params: any[] = [];
+    let where = `WHERE p.estado_registro = 'ACTIVO'`;
+    if (search) {
+      where += ` AND (p.dni LIKE ? OR p.apellidos_nombres LIKE ?)`;
+      const term = `%${String(search).trim()}%`;
+      params.push(term, term);
+    }
+    const excluirVinculados = `AND (pe.id_personal IS NULL OR pe.id_personal = ?)`;
+    params.push(idPersonalActual || 0);
+
+    let orderBy = 'ORDER BY p.apellidos_nombres ASC';
+    if (idComuneroActual) {
+      orderBy = 'ORDER BY CASE WHEN p.id_comunero = ? THEN 0 ELSE 1 END, p.apellidos_nombres ASC';
+      params.push(idComuneroActual);
+    }
+
+    const sql = `
+      SELECT p.id_comunero, p.dni, p.apellidos_nombres
+      FROM comunero p
+      LEFT JOIN personal pe ON pe.id_comunero = p.id_comunero AND pe.estado_registro = 'ACTIVO'
+      ${where} ${excluirVinculados}
+      ${orderBy}
+      LIMIT 20
+    `;
+    return this.dataSource.query(sql, params);
+  }
+
   async findOne(id: number) {
     const [row] = await this.dataSource.query(
       `SELECT p.* FROM personal p WHERE p.id_personal = ? AND p.estado_registro = 'ACTIVO'`,
@@ -70,7 +100,10 @@ export class PersonalService {
     return row;
   }
 
-  private async assertCatalogosActivos(dto: { id_area?: number; id_cargo?: number; id_regimen?: number }) {
+  private async assertCatalogosActivos(
+    dto: { id_area?: number; id_cargo?: number; id_regimen?: number; id_comunero?: number },
+    idPersonalActual?: number,
+  ) {
     if (dto.id_area) {
       const [row] = await this.dataSource.query(
         `SELECT id_area FROM area WHERE id_area = ? AND estado_registro = 'ACTIVO'`,
@@ -92,6 +125,19 @@ export class PersonalService {
       );
       if (!row) throw new NotFoundException('El régimen laboral seleccionado no existe o fue eliminado');
     }
+    if (dto.id_comunero) {
+      const [comunero] = await this.dataSource.query(
+        `SELECT id_comunero FROM comunero WHERE id_comunero = ? AND estado_registro = 'ACTIVO'`,
+        [dto.id_comunero],
+      );
+      if (!comunero) throw new NotFoundException('El comunero seleccionado no existe o fue eliminado');
+
+      const [vinculado] = await this.dataSource.query(
+        `SELECT id_personal FROM personal WHERE id_comunero = ? AND estado_registro = 'ACTIVO' AND id_personal != ?`,
+        [dto.id_comunero, idPersonalActual || 0],
+      );
+      if (vinculado) throw new ConflictException('Ese comunero ya está vinculado a otro trabajador');
+    }
   }
 
   async create(dto: CreatePersonalDto, userId: number) {
@@ -105,9 +151,9 @@ export class PersonalService {
     const res = await this.dataSource.query(
       `INSERT INTO personal (
         dni, codigo_personal, nombres, apellidos, telefono, correo, fecha_nacimiento, sexo,
-        fecha_ingreso, id_area, id_cargo, id_regimen, centro_trabajo, observaciones,
+        fecha_ingreso, id_area, id_cargo, id_regimen, id_comunero, centro_trabajo, observaciones,
         consentimiento_biometrico, fecha_consentimiento_biometrico, id_usuario_crea
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ${consentimiento ? 'CURDATE()' : 'NULL'}, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ${consentimiento ? 'CURDATE()' : 'NULL'}, ?)`,
       [
         dto.dni,
         codigoPersonal,
@@ -121,6 +167,7 @@ export class PersonalService {
         dto.id_area ?? null,
         dto.id_cargo ?? null,
         dto.id_regimen ?? null,
+        dto.id_comunero ?? null,
         dto.centro_trabajo?.trim() || null,
         dto.observaciones?.trim() || null,
         consentimiento,
@@ -134,7 +181,7 @@ export class PersonalService {
 
   async update(id: number, dto: UpdatePersonalDto, userId: number) {
     const antiguo = await this.findOne(id);
-    await this.assertCatalogosActivos(dto);
+    await this.assertCatalogosActivos(dto, id);
 
     const nombres = dto.nombres ? dto.nombres.trim().toUpperCase() : antiguo.nombres;
     const apellidos = dto.apellidos ? dto.apellidos.trim().toUpperCase() : antiguo.apellidos;
@@ -147,6 +194,7 @@ export class PersonalService {
     const idArea = dto.id_area ?? antiguo.id_area;
     const idCargo = dto.id_cargo ?? antiguo.id_cargo;
     const idRegimen = dto.id_regimen ?? antiguo.id_regimen;
+    const idComunero = dto.id_comunero !== undefined ? dto.id_comunero : antiguo.id_comunero;
     const centroTrabajo = dto.centro_trabajo !== undefined ? (dto.centro_trabajo?.trim() || null) : antiguo.centro_trabajo;
     const observaciones = dto.observaciones !== undefined ? (dto.observaciones?.trim() || null) : antiguo.observaciones;
 
@@ -161,13 +209,13 @@ export class PersonalService {
       `UPDATE personal SET
         codigo_personal = ?, nombres = ?, apellidos = ?, telefono = ?, correo = ?,
         fecha_nacimiento = ?, sexo = ?, fecha_ingreso = ?, id_area = ?, id_cargo = ?, id_regimen = ?,
-        centro_trabajo = ?, observaciones = ?, consentimiento_biometrico = ?,
+        id_comunero = ?, centro_trabajo = ?, observaciones = ?, consentimiento_biometrico = ?,
         fecha_consentimiento_biometrico = ${fechaConsentimientoSql}, id_usuario_mod = ?
       WHERE id_personal = ? AND estado_registro = 'ACTIVO'`,
       [
         codigoPersonal, nombres, apellidos, telefono, correo,
         fechaNacimiento, sexo, fechaIngreso, idArea, idCargo, idRegimen,
-        centroTrabajo, observaciones, consentimientoNuevo ? 1 : 0,
+        idComunero, centroTrabajo, observaciones, consentimientoNuevo ? 1 : 0,
         ...paramsFechaConsentimiento,
         userId, id,
       ],

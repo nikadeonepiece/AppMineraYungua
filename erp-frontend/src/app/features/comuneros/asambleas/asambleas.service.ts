@@ -4,9 +4,9 @@ import { environment } from 'src/environments/environment';
 import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
-export class TrabajadoresService {
+export class AsambleasService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrlGestion}/personal`;
+  private apiUrl = `${environment.apiUrlGestion}/comuneros/asambleas`;
 
   findAll(page: number, limit: number, search: string): Observable<any> {
     let params = new HttpParams().set('page', page).set('limit', limit);
@@ -18,13 +18,6 @@ export class TrabajadoresService {
     return this.http.get(`${this.apiUrl}/${id}`);
   }
 
-  buscarComuneros(search: string, idPersonalActual?: number, idComuneroActual?: number): Observable<any> {
-    let params = new HttpParams().set('search', search || '');
-    if (idPersonalActual) params = params.set('id_personal_actual', idPersonalActual);
-    if (idComuneroActual) params = params.set('id_comunero_actual', idComuneroActual);
-    return this.http.get(`${this.apiUrl}/buscar-comunero`, { params });
-  }
-
   create(data: any): Observable<any> {
     return this.http.post(this.apiUrl, data);
   }
@@ -33,7 +26,19 @@ export class TrabajadoresService {
     return this.http.put(`${this.apiUrl}/${id}`, data);
   }
 
-  delete(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  findAsistencia(idAsamblea: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/${idAsamblea}/asistencia`);
+  }
+
+  findComuneros(idAsamblea: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/${idAsamblea}/comuneros`);
+  }
+
+  marcarAsistencia(idAsamblea: number, data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${idAsamblea}/asistencia`, data);
+  }
+
+  quitarAsistencia(idAsamblea: number, idAsistencia: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${idAsamblea}/asistencia/${idAsistencia}`);
   }
 }

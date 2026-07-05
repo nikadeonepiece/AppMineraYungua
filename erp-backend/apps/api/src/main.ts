@@ -9,6 +9,7 @@ import { ApiModule } from './api.module';
 import { AllExceptionsFilter, TransformInterceptor } from '@app/common';
 import { winstonConfig } from '@app/logger';
 import { WinstonModule } from 'nest-winston';
+import { DatabaseExceptionFilter } from './common/filters/database-exception.filter';
 
 async function bootstrap() {
   // 🔥 Usamos NestExpressApplication para habilitar la exposición de la carpeta 'uploads'
@@ -45,7 +46,7 @@ async function bootstrap() {
   );
 
   app.useGlobalInterceptors(new TransformInterceptor());
-  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(new DatabaseExceptionFilter(), new AllExceptionsFilter());
 
   // 🔥 NUEVO: Exponer la carpeta "uploads" para que el frontend pueda descargar/ver los archivos
   // Se asume que la carpeta 'uploads' estará en la raíz del backend

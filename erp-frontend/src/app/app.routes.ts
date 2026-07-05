@@ -27,8 +27,9 @@ export const routes: Routes = [
       { path: 'admin/seguridad/permisos', loadComponent: () => import('./features/permisos/permisos.component').then(m => m.PermisosComponent), canActivate: [permissionGuard], data: { permiso: 'ver_seguridad' } },
       { path: 'admin/usuarios', loadComponent: () => import('./features/usuarios/usuarios.component').then(m => m.UsuariosComponent), canActivate: [permissionGuard], data: { permiso: 'ver_usuario' } },
       { path: 'personal', loadComponent: () => import('./features/personal/personal-page.component').then(m => m.PersonalPageComponent), canActivate: [permissionGuard], data: { permiso: 'ver_personal' } },
-
-      // MÓDULO: COMUNEROS (pendiente de construir)
+      { path: 'comuneros', loadComponent: () => import('./features/comuneros/comuneros-page.component').then(m => m.ComunerosPageComponent), canActivate: [permissionGuard], data: { permiso: 'ver_comunero' } },
+      { path: 'comuneros/asambleas', loadComponent: () => import('./features/comuneros/asambleas/asambleas.component').then(m => m.AsambleasComponent), canActivate: [permissionGuard], data: { permiso: 'ver_asamblea' } },
+      { path: 'comuneros/asistencia-asambleas', loadComponent: () => import('./features/comuneros/asistencia-asambleas/asistencia-asambleas.component').then(m => m.AsistenciaAsambleasComponent), canActivate: [permissionGuard], data: { permiso: 'ver_asamblea' } },
 
     ]
   },

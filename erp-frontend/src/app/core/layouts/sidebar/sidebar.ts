@@ -56,7 +56,16 @@ export class Sidebar implements OnInit {
       route: '/personal', type: 'link', permiso: 'ver_personal'
     },
 
-    // MÓDULO: COMUNEROS (pendiente de construir)
+    { label: 'COMUNIDAD CAMPESINA', type: 'header' },
+
+    {
+      label: 'Comuneros', icon: 'bi-house-heart-fill', type: 'dropdown', active: false,
+      children: [
+        { label: 'Padrón de Comuneros', route: '/comuneros', permiso: 'ver_comunero' },
+        { label: 'Asambleas', route: '/comuneros/asambleas', permiso: 'ver_asamblea' },
+        { label: 'Asistencia de Asambleas', route: '/comuneros/asistencia-asambleas', permiso: 'ver_asamblea' },
+      ],
+    },
   ];
 
   ngOnInit() {

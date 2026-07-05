@@ -9,6 +9,7 @@
             <th class="fw-bold border-0">NOMBRES Y APELLIDOS</th>
             <th class="fw-bold border-0">ÁREA / CARGO</th>
             <th class="fw-bold border-0">RÉGIMEN</th>
+            <th class="fw-bold border-0">COMUNERO</th>
             <th class="fw-bold border-0 text-center">CONSENTIMIENTO</th>
             <th class="text-center border-0" style="width: 120px;">ACCIONES</th>
         </tr>
@@ -31,6 +32,13 @@
                     @if (item.nombre_cargo) { <div class="text-xs-erp">{{ item.nombre_cargo }}</div> }
                 </td>
                 <td class="text-muted-erp text-uppercase">{{ item.nombre_regimen || '—' }}</td>
+                <td class="text-muted-erp text-uppercase">
+                    @if (item.id_comunero) {
+                        <span class="badge-erp badge-success">COMUNERO</span>
+                    } @else {
+                        —
+                    }
+                </td>
                 <td class="text-center">
                     @if (item.consentimiento_biometrico) {
                         <span class="badge-erp badge-success">SÍ</span>
@@ -54,7 +62,7 @@
                 </td>
             </tr>
         } @empty {
-            <tr><td colspan="6" class="text-center py-5 text-muted-erp">No hay trabajadores registrados.</td></tr>
+            <tr><td colspan="7" class="text-center py-5 text-muted-erp">No hay trabajadores registrados.</td></tr>
         }
     </tbody>
 </app-table-pro>
@@ -75,6 +83,9 @@
                 <label class="form-label">DNI <span class="req-star">*</span></label>
                 <input type="text" class="form-control" formControlName="dni" maxlength="8">
                 <app-form-error [control]="form.get('dni')"></app-form-error>
+                @if (form.get('dni')?.disabled) {
+                    <div class="text-muted-erp text-xs-erp mt-1">Autocompletado del comunero vinculado.</div>
+                }
             </div>
             <div class="col-md-4">
                 <label class="form-label">Código de personal</label>
@@ -139,6 +150,17 @@
                            formControlName="id_regimen" placeholder="Seleccionar..." appendTo="body"
                            notFoundText="Sin resultados">
                 </ng-select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Comunero vinculado (opcional)</label>
+                <ng-select class="ng-select-sm" [items]="comuneros()" bindLabel="apellidos_nombres" bindValue="id_comunero"
+                           formControlName="id_comunero" placeholder="Buscar por DNI o nombres..." appendTo="body"
+                           (search)="onBuscarComunero($event.term)" (change)="onComuneroSeleccionado($event)"
+                           [loading]="buscandoComunero()" loadingText="Buscando..." notFoundText="Sin resultados"
+                           [minTermLength]="2" typeToSearchText="Escribe al menos 2 caracteres" [clearable]="true">
+                </ng-select>
+                <div class="text-muted-erp text-xs-erp mt-1">Al elegir un comunero se autocompleta su DNI y nombre.</div>
             </div>
 
             <div class="col-md-6">

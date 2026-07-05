@@ -70,6 +70,11 @@ export class CreatePersonalDto {
   id_regimen?: number;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
+  id_comunero?: number;
+
+  @IsOptional()
   @IsString()
   @MaxLength(120)
   centro_trabajo?: string;

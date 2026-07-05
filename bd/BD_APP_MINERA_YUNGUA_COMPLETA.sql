@@ -243,7 +243,6 @@ CREATE TABLE IF NOT EXISTS `comunero_caserio` (
 
 CREATE TABLE IF NOT EXISTS `asamblea` (
   `id_asamblea` int NOT NULL AUTO_INCREMENT COMMENT 'Llave primaria de la asamblea/reunión',
-  `id_caserio` int NOT NULL COMMENT 'Caserío al que corresponde esta asamblea',
   `titulo` varchar(200) DEFAULT NULL COMMENT 'Motivo o título de la asamblea, si se conoce',
   `fecha` date DEFAULT NULL COMMENT 'Fecha de la asamblea, si se conoce',
   `estado` ENUM('PROGRAMADA', 'REALIZADA', 'CERRADA') NOT NULL DEFAULT 'PROGRAMADA' COMMENT 'CERRADA = ya no admite editar asistencia (evita alterar el acta después del hecho)',
@@ -251,10 +250,24 @@ CREATE TABLE IF NOT EXISTS `asamblea` (
   `id_usuario_mod` int DEFAULT NULL COMMENT 'Último usuario que modificó el registro',
   `estado_registro` ENUM('ACTIVO', 'ELIMINADO') NOT NULL DEFAULT 'ACTIVO' COMMENT 'Soft delete',
   PRIMARY KEY (`id_asamblea`),
-  CONSTRAINT `fk_asamblea_caserio` FOREIGN KEY (`id_caserio`) REFERENCES `caserio` (`id_caserio`) ON DELETE CASCADE,
   CONSTRAINT `fk_asamblea_usuario_crea` FOREIGN KEY (`id_usuario_crea`) REFERENCES `sis_usuario` (`id_usuario`) ON DELETE SET NULL,
   CONSTRAINT `fk_asamblea_usuario_mod` FOREIGN KEY (`id_usuario_mod`) REFERENCES `sis_usuario` (`id_usuario`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=1 COMMENT='MÓDULO: Comuneros. Asamblea o reunión de un caserío.';
+) ENGINE=InnoDB AUTO_INCREMENT=1 COMMENT='MÓDULO: Comuneros. Asamblea o reunión, puede convocar a uno o varios caseríos.';
+
+CREATE TABLE IF NOT EXISTS `asamblea_caserio` (
+  `id_asamblea_caserio` int NOT NULL AUTO_INCREMENT COMMENT 'Llave primaria de la convocatoria',
+  `id_asamblea` int NOT NULL COMMENT 'Asamblea convocada',
+  `id_caserio` int NOT NULL COMMENT 'Caserío convocado a esa asamblea',
+  `id_usuario_crea` int DEFAULT NULL COMMENT 'Usuario que creó el registro (NULL en datos migrados)',
+  `id_usuario_mod` int DEFAULT NULL COMMENT 'Último usuario que modificó el registro',
+  `estado_registro` ENUM('ACTIVO', 'ELIMINADO') NOT NULL DEFAULT 'ACTIVO' COMMENT 'Soft delete',
+  PRIMARY KEY (`id_asamblea_caserio`),
+  UNIQUE KEY `uk_asamblea_caserio` (`id_asamblea`, `id_caserio`),
+  CONSTRAINT `fk_asamblea_caserio_asamblea` FOREIGN KEY (`id_asamblea`) REFERENCES `asamblea` (`id_asamblea`) ON DELETE CASCADE,
+  CONSTRAINT `fk_asamblea_caserio_caserio` FOREIGN KEY (`id_caserio`) REFERENCES `caserio` (`id_caserio`) ON DELETE CASCADE,
+  CONSTRAINT `fk_asamblea_caserio_usuario_crea` FOREIGN KEY (`id_usuario_crea`) REFERENCES `sis_usuario` (`id_usuario`) ON DELETE SET NULL,
+  CONSTRAINT `fk_asamblea_caserio_usuario_mod` FOREIGN KEY (`id_usuario_mod`) REFERENCES `sis_usuario` (`id_usuario`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=1 COMMENT='MÓDULO: Comuneros. Tabla pivote: caseríos convocados a una asamblea.';
 
 CREATE TABLE IF NOT EXISTS `asistencia_asamblea` (
   `id_asistencia` int NOT NULL AUTO_INCREMENT COMMENT 'Llave primaria de la asistencia',
@@ -5702,7 +5715,10 @@ INSERT INTO `comunero_caserio` (`id_comunero`, `id_caserio`, `numero_padron`) VA
 
 -- ---------- SEED: una asamblea por caserío (el propio padrón/hoja de origen es su lista de asistencia) ----------
 
-INSERT INTO `asamblea` (`id_asamblea`, `id_caserio`) VALUES
+INSERT INTO `asamblea` (`id_asamblea`) VALUES
+(1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11);
+
+INSERT INTO `asamblea_caserio` (`id_asamblea`, `id_caserio`) VALUES
 (1, 1),
 (2, 2),
 (3, 3),
@@ -8540,6 +8556,7 @@ CREATE TABLE IF NOT EXISTS `personal` (
   `id_area` int DEFAULT NULL,
   `id_cargo` int DEFAULT NULL,
   `id_regimen` int DEFAULT NULL,
+  `id_comunero` int DEFAULT NULL COMMENT 'Si este trabajador es a la vez un comunero inscrito en el padrón, referencia opcional a comunero.id_comunero',
   `centro_trabajo` varchar(120) DEFAULT NULL COMMENT 'Centro de trabajo / sede donde presta servicio',
   `observaciones` varchar(255) DEFAULT NULL COMMENT 'Notas libres sobre el trabajador',
   `foto` varchar(255) DEFAULT NULL COMMENT 'Ruta relativa a la foto de referencia del trabajador (se toma una vez, al inscribirlo)',
@@ -8553,12 +8570,14 @@ CREATE TABLE IF NOT EXISTS `personal` (
   PRIMARY KEY (`id_personal`),
   UNIQUE KEY `uk_dni_personal` (`dni`),
   UNIQUE KEY `uk_codigo_personal` (`codigo_personal`),
+  UNIQUE KEY `uk_comunero_personal` (`id_comunero`),
   CONSTRAINT `fk_personal_area` FOREIGN KEY (`id_area`) REFERENCES `area` (`id_area`) ON DELETE SET NULL,
   CONSTRAINT `fk_personal_cargo` FOREIGN KEY (`id_cargo`) REFERENCES `cargo` (`id_cargo`) ON DELETE SET NULL,
   CONSTRAINT `fk_personal_regimen` FOREIGN KEY (`id_regimen`) REFERENCES `regimen_laboral` (`id_regimen`) ON DELETE SET NULL,
+  CONSTRAINT `fk_personal_comunero` FOREIGN KEY (`id_comunero`) REFERENCES `comunero` (`id_comunero`) ON DELETE SET NULL,
   CONSTRAINT `fk_personal_usuario_crea` FOREIGN KEY (`id_usuario_crea`) REFERENCES `sis_usuario` (`id_usuario`) ON DELETE SET NULL,
   CONSTRAINT `fk_personal_usuario_mod` FOREIGN KEY (`id_usuario_mod`) REFERENCES `sis_usuario` (`id_usuario`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=1 COMMENT='MÓDULO: Personal. Trabajador pagado de la empresa (distinto del comunero).';
+) ENGINE=InnoDB AUTO_INCREMENT=1 COMMENT='MÓDULO: Personal. Trabajador pagado de la empresa (distinto del comunero, pero puede vincularse a uno vía id_comunero).';
 
 CREATE TABLE IF NOT EXISTS `personal_biometria` (
   `id_biometria` int NOT NULL AUTO_INCREMENT COMMENT 'Llave primaria',
@@ -8788,3 +8807,26 @@ BEGIN
 END//
 
 DELIMITER ;
+
+-- ==============================================================================
+-- MIGRACIÓN: vínculo opcional personal <-> comunero (id_comunero en `personal`)
+-- Idempotente: segura de correr tanto en una BD nueva (creada ya con la columna
+-- en el CREATE TABLE de `personal` de este mismo archivo) como en una BD que ya
+-- existía antes de este cambio.
+-- ==============================================================================
+
+ALTER TABLE `personal`
+  ADD COLUMN IF NOT EXISTS `id_comunero` int DEFAULT NULL COMMENT 'Si este trabajador es a la vez un comunero inscrito en el padrón, referencia opcional a comunero.id_comunero' AFTER `id_regimen`;
+
+SET @fk_personal_comunero_existe = (
+  SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'personal' AND CONSTRAINT_NAME = 'fk_personal_comunero'
+);
+SET @sql_fk_personal_comunero = IF(
+  @fk_personal_comunero_existe = 0,
+  'ALTER TABLE `personal` ADD UNIQUE KEY `uk_comunero_personal` (`id_comunero`), ADD CONSTRAINT `fk_personal_comunero` FOREIGN KEY (`id_comunero`) REFERENCES `comunero` (`id_comunero`) ON DELETE SET NULL',
+  'SELECT 1'
+);
+PREPARE stmt_fk_personal_comunero FROM @sql_fk_personal_comunero;
+EXECUTE stmt_fk_personal_comunero;
+DEALLOCATE PREPARE stmt_fk_personal_comunero;

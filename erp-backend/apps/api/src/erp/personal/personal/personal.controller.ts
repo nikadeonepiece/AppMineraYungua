@@ -15,6 +15,20 @@ export class PersonalController {
   }
 
   @RequirePermissions('PERSONAL', 'ver_personal')
+  @Get('buscar-comunero')
+  buscarComuneros(
+    @Query('search') search: string,
+    @Query('id_personal_actual') idPersonalActual?: string,
+    @Query('id_comunero_actual') idComuneroActual?: string,
+  ) {
+    return this.personalService.buscarComuneros(
+      search,
+      idPersonalActual ? Number(idPersonalActual) : undefined,
+      idComuneroActual ? Number(idComuneroActual) : undefined,
+    );
+  }
+
+  @RequirePermissions('PERSONAL', 'ver_personal')
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.personalService.findOne(id);
