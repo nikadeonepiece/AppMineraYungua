@@ -1,0 +1,22 @@
+# Flutter
+.dart_tool/
+.packages
+build/
+
+# IDE
+.idea/
+*.iml
+
+# Env local
+.env
+
+# Android
+**/android/.gradle/
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+
+# iOS
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec

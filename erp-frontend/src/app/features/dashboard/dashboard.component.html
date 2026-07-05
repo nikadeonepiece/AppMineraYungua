@@ -1,0 +1,33 @@
+<div class="container-fluid p-3 p-md-4 mx-auto" style="max-width: var(--erp-max-width);">
+
+    <div class="card-pro p-3 p-md-4">
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+            <div>
+                <div class="fw-bold text-erp">Comuneros por caserío</div>
+                <div class="text-muted-erp text-xs-erp">Total de comuneros inscritos, por caserío</div>
+            </div>
+            @if (!loading() && porCaserio().length > 0) {
+                <div class="text-end">
+                    <div class="fw-bold fs-5 text-erp">{{ totalGeneral() }}</div>
+                    <div class="text-muted-erp text-xs-erp">total comuneros</div>
+                </div>
+            }
+        </div>
+
+        @if (loading()) {
+            <div class="text-center py-5 text-muted-erp">
+                <span class="spinner-border spinner-border-sm me-2"></span> Cargando...
+            </div>
+        } @else if (porCaserio().length === 0) {
+            <div class="text-center py-5 text-muted-erp">Sin datos de caseríos.</div>
+        } @else {
+            <div style="height: 360px;">
+                <canvas baseChart
+                    [type]="chartType"
+                    [data]="chartData()"
+                    [options]="chartOptions()">
+                </canvas>
+            </div>
+        }
+    </div>
+</div>

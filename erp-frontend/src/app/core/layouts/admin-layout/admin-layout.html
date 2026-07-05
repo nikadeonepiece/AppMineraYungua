@@ -1,0 +1,38 @@
+﻿<div class="d-flex w-100 h-100 overflow-hidden">
+  
+  <app-sidebar></app-sidebar>
+  <app-settings-panel></app-settings-panel>
+  <app-toast></app-toast>
+  
+  @if (layoutService.isLoading()) {
+    <div class="global-top-progress-bar"></div>
+  }
+
+  <div class="layout-main-content flex-grow-1 d-flex flex-column h-100">
+
+    <nav class="app-navbar navbar px-4 py-3 d-flex justify-content-between flex-shrink-0">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-soft-neutral btn-icon"
+                (click)="layoutService.toggleSidebar()">
+          <i class="bi bi-list fs-5"></i>
+        </button>
+
+        <h5 class="m-0 fw-bold unselectable text-main navbar-title">
+          Sistema de Gestión
+        </h5>
+      </div>
+
+      <div class="d-flex gap-3">
+        <button class="btn btn-soft-neutral btn-icon rounded-circle"
+                (click)="layoutService.toggleSettings()">
+          <i class="bi bi-gear-fill"></i>
+        </button>
+      </div>
+    </nav>
+
+    <main class="flex-grow-1 overflow-auto p-4 custom-scroll">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+</div>

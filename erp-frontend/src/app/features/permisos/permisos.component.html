@@ -1,0 +1,67 @@
+<div class="container-fluid p-3 p-md-4 form-wrapper" style="max-width: 1400px;">
+  
+  <div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+      <h5 class="form-section-title border-0 mb-1">
+          <div class="icon-badge"><i class="bi bi-shield-lock-fill"></i></div>
+          Matriz de Roles y Permisos
+      </h5>
+      <p class="text-muted m-0" style="font-size: 0.7rem; margin-left: 44px !important;">Asigna granularmente qué puede hacer cada perfil en el sistema.</p>
+    </div>
+  </div>
+
+  <div class="card-pro mb-4 p-4 animate__animated animate__fadeIn">
+    <label class="form-label text-muted small fw-bold">SELECCIONE EL ROL A CONFIGURAR</label>
+    <ng-select 
+        [items]="roles()" 
+        bindLabel="nombre" 
+        bindValue="id_rol" 
+        placeholder="Seleccione un perfil (Ej: Administrador, Revisor...)"
+        (change)="onRolChange($event)"
+        class="fw-bold">
+    </ng-select>
+  </div>
+
+  @if(rolSeleccionado()) {
+    <div class="row g-4 animate__animated animate__fadeInUp">
+      @for(modulo of modulos(); track modulo.id_modulo) {
+        <div class="col-md-6 col-lg-4">
+          <div class="card-pro h-100 p-0 border-0 shadow-sm" style="overflow: hidden;">
+            <div class="card-header-pro bg-light bg-opacity-50">
+              <h6 class="m-0 fw-bold text-primary-erp text-uppercase" style="font-size: 0.8rem;">
+                <i class="bi bi-box-seam me-2"></i>{{ modulo.etiqueta }}
+              </h6>
+            </div>
+            <div class="card-body-pro p-3">
+              
+              @for(accion of modulo.acciones; track accion.id_accion) {
+                <div class="form-check form-switch mb-3 custom-switch-premium">
+                  <input 
+                    class="form-check-input cursor-pointer" 
+                    type="checkbox" 
+                    [id]="'check_' + accion.id_accion"
+                    [checked]="isMarcado(accion.id_accion)"
+                    (change)="toggleAccion(accion.id_accion, $any($event.target).checked)">
+                  <label class="form-check-label cursor-pointer ms-2 w-100" [for]="'check_' + accion.id_accion">
+                    <span class="d-block fw-bold text-dark" style="font-size: 0.75rem;">{{ accion.descripcion }}</span>
+                    <span class="d-block text-muted font-numeric mt-1" style="font-size: 0.65rem;">CODE: {{ accion.codigo }}</span>
+                  </label>
+                </div>
+              }
+
+              @if(modulo.acciones.length === 0) {
+                <p class="text-muted small m-0 fst-italic">No hay acciones configurables.</p>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="position-sticky bottom-0 mt-4 py-3 bg-card border-top shadow-lg d-flex justify-content-end px-4" style="border-radius: 12px; z-index: 100;">
+      <button class="btn btn-primary px-5 py-2 shadow-sm" (click)="guardarMatriz()">
+        <i class="bi bi-save me-2"></i> GUARDAR MATRIZ DE PERMISOS
+      </button>
+    </div>
+  }
+</div>

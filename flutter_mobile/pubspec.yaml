@@ -1,0 +1,51 @@
+name: control_asistencia_mobile
+description: Marcacion facial en tiempo real (Flutter + ML Kit).
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  camera: ^0.11.0+2
+  google_mlkit_commons: ^0.8.1
+  google_mlkit_face_detection: ^0.11.1
+  mobile_scanner: ^5.2.3
+  http: ^1.2.2
+  dio: ^5.9.0
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  flutter_riverpod: ^2.6.1
+  connectivity_plus: ^6.1.5
+  workmanager: ^0.9.0+3
+  logger: ^2.6.2
+  uuid: ^4.5.1
+  path_provider: ^2.1.5
+  flutter_secure_storage: ^9.2.2
+  permission_handler: ^11.3.1
+  image: ^4.3.0
+  tflite_flutter: ^0.11.0
+  safe_device: ^1.1.6
+  device_info_plus: ^11.5.0
+  package_info_plus: ^8.3.1
+  flutter_windowmanager_plus: ^1.0.1
+  crypto: ^3.0.6
+  cryptography: ^2.7.0
+  battery_plus: ^6.2.1
+  cupertino_icons: ^1.0.8
+  flutter_tts: ^4.2.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.13
+  isar_generator: ^3.1.0+1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/models/mobilefacenet.tflite
+    - assets/branding/LogoChuyugual.png
