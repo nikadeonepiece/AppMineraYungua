@@ -1,0 +1,89 @@
+<app-table-pro titulo="Cargos" subtitulo="Puestos de trabajo por área" btnText="NUEVO CARGO"
+    [showAddBtn]="perms.hasPermission('crear_personal')" [loading]="crud.tableLoading()"
+    [data]="crud.resource().data" [meta]="crud.resource().meta"
+    (add)="abrirModal(modalFormulario)" (pageChange)="crud.cambiarPagina($event)" (search)="onSearch($event)">
+
+    <thead thead class="text-uppercase text-muted border-bottom table-header-erp">
+        <tr>
+            <th class="ps-3 fw-bold border-0" style="width: 80px;">ID</th>
+            <th class="fw-bold border-0">NOMBRE</th>
+            <th class="fw-bold border-0">ÁREA</th>
+            <th class="fw-bold border-0 text-center">BREVETE</th>
+            <th class="text-center border-0" style="width: 120px;">ACCIONES</th>
+        </tr>
+    </thead>
+    <tbody tbody>
+        @for (item of crud.resource().data; track item.id_cargo) {
+            <tr class="main-row align-middle fila-animada">
+                <td class="ps-3 py-3"><div class="fw-bold text-primary-erp">#{{ item.id_cargo }}</div></td>
+                <td class="fw-bold text-erp text-uppercase">{{ item.nombre }}</td>
+                <td class="text-muted-erp text-uppercase">{{ item.nombre_area }}</td>
+                <td class="text-center">
+                    @if (item.requiere_brevete) {
+                        <span class="badge-erp badge-warning">SÍ</span>
+                    } @else {
+                        <span class="badge-erp badge-secondary">NO</span>
+                    }
+                </td>
+                <td class="text-center">
+                    <div class="d-flex justify-content-center gap-2">
+                        @if (perms.hasPermission('editar_personal')) {
+                            <button type="button" class="btn-action-edit" (click)="abrirModal(modalFormulario, item)">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                        }
+                        @if (perms.hasPermission('eliminar_personal')) {
+                            <button type="button" class="btn-action-delete" (click)="eliminar(item)">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        }
+                    </div>
+                </td>
+            </tr>
+        } @empty {
+            <tr><td colspan="5" class="text-center py-5 text-muted-erp">No hay cargos registrados.</td></tr>
+        }
+    </tbody>
+</app-table-pro>
+
+<ng-template #modalFormulario let-modal>
+    <div class="modal-header border-bottom-dashed-erp bg-erp px-4 py-3">
+        <h5 class="modal-title fw-bold text-erp">
+            <div class="icon-badge me-2"><i class="bi bi-person-badge-fill"></i></div>
+            {{ crud.editingId() ? 'Editar Cargo' : 'Nuevo Cargo' }}
+        </h5>
+        <button type="button" class="btn-close shadow-none" (click)="modal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body p-4 bg-card">
+        <form [formGroup]="form" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Área <span class="req-star">*</span></label>
+                <ng-select class="ng-select-sm" [items]="areas()" bindLabel="nombre" bindValue="id_area"
+                           formControlName="id_area" placeholder="Seleccionar..." appendTo="body"
+                           notFoundText="Sin resultados" [clearable]="false">
+                </ng-select>
+                <app-form-error [control]="form.get('id_area')"></app-form-error>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Nombre <span class="req-star">*</span></label>
+                <input type="text" class="form-control text-uppercase" formControlName="nombre"
+                       oninput="this.value = this.value.toUpperCase()">
+                <app-form-error [control]="form.get('nombre')"></app-form-error>
+            </div>
+            <div class="col-12">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="requiereBrevete" formControlName="requiere_brevete">
+                    <label class="form-check-label" for="requiereBrevete">Exige registrar licencia de conducir (brevete)</label>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal-footer bg-erp border-top-dashed-erp d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-soft-neutral" (click)="modal.dismiss()">CANCELAR</button>
+        <button type="button" class="btn btn-primary" (click)="guardar()" [disabled]="form.invalid || crud.tableLoading()">
+            <i class="bi bi-save me-1"></i> GUARDAR
+        </button>
+    </div>
+</ng-template>

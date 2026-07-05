@@ -15,6 +15,12 @@ import { AuthModule as LocalAuthModule } from './core/auth/auth.module';
 
 // --- Módulos ERP ---
 import { DashboardModule } from './erp/dashboard/dashboard.module';
+import { AreaModule } from './erp/personal/area/area.module';
+import { CargoModule } from './erp/personal/cargo/cargo.module';
+import { RegimenLaboralModule } from './erp/personal/regimen-laboral/regimen-laboral.module';
+import { TurnoTrabajoModule } from './erp/personal/turno-trabajo/turno-trabajo.module';
+import { PersonalModule } from './erp/personal/personal/personal.module';
+import { MarcacionAsistenciaModule } from './erp/marcacion-asistencia/marcacion-asistencia.module';
 
 @Module({
   imports: [
@@ -27,6 +33,12 @@ import { DashboardModule } from './erp/dashboard/dashboard.module';
     SeguridadModule,
     MailModule,
     DashboardModule,
+    AreaModule,
+    CargoModule,
+    RegimenLaboralModule,
+    TurnoTrabajoModule,
+    PersonalModule,
+    MarcacionAsistenciaModule,
   ],
   controllers: [ApiController],
   providers: [ApiService],

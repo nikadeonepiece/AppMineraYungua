@@ -1,0 +1,171 @@
+<app-table-pro titulo="Trabajadores" subtitulo="Personal pagado de la empresa" btnText="NUEVO TRABAJADOR"
+    [showAddBtn]="perms.hasPermission('crear_personal')" [loading]="crud.tableLoading()"
+    [data]="crud.resource().data" [meta]="crud.resource().meta"
+    (add)="abrirModal(modalFormulario)" (pageChange)="crud.cambiarPagina($event)" (search)="onSearch($event)">
+
+    <thead thead class="text-uppercase text-muted border-bottom table-header-erp">
+        <tr>
+            <th class="ps-3 fw-bold border-0" style="width: 90px;">ID / DNI</th>
+            <th class="fw-bold border-0">NOMBRES Y APELLIDOS</th>
+            <th class="fw-bold border-0">ÁREA / CARGO</th>
+            <th class="fw-bold border-0">RÉGIMEN</th>
+            <th class="fw-bold border-0 text-center">CONSENTIMIENTO</th>
+            <th class="text-center border-0" style="width: 120px;">ACCIONES</th>
+        </tr>
+    </thead>
+    <tbody tbody>
+        @for (item of crud.resource().data; track item.id_personal) {
+            <tr class="main-row align-middle fila-animada">
+                <td class="ps-3 py-3">
+                    <div class="fw-bold text-primary-erp">#{{ item.id_personal }}</div>
+                    <div class="text-muted-erp text-xs-erp font-numeric-erp fw-bold mt-1">{{ item.dni }}</div>
+                </td>
+                <td class="fw-bold text-erp text-uppercase">
+                    {{ item.nombres }} {{ item.apellidos }}
+                    @if (item.codigo_personal) {
+                        <div class="text-muted-erp text-xs-erp fw-normal">Código: {{ item.codigo_personal }}</div>
+                    }
+                </td>
+                <td class="text-muted-erp text-uppercase">
+                    {{ item.nombre_area || '—' }}
+                    @if (item.nombre_cargo) { <div class="text-xs-erp">{{ item.nombre_cargo }}</div> }
+                </td>
+                <td class="text-muted-erp text-uppercase">{{ item.nombre_regimen || '—' }}</td>
+                <td class="text-center">
+                    @if (item.consentimiento_biometrico) {
+                        <span class="badge-erp badge-success">SÍ</span>
+                    } @else {
+                        <span class="badge-erp badge-danger">NO</span>
+                    }
+                </td>
+                <td class="text-center">
+                    <div class="d-flex justify-content-center gap-2">
+                        @if (perms.hasPermission('editar_personal')) {
+                            <button type="button" class="btn-action-edit" (click)="abrirModal(modalFormulario, item)">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                        }
+                        @if (perms.hasPermission('eliminar_personal')) {
+                            <button type="button" class="btn-action-delete" (click)="eliminar(item)">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        }
+                    </div>
+                </td>
+            </tr>
+        } @empty {
+            <tr><td colspan="6" class="text-center py-5 text-muted-erp">No hay trabajadores registrados.</td></tr>
+        }
+    </tbody>
+</app-table-pro>
+
+<ng-template #modalFormulario let-modal>
+    <div class="modal-header border-bottom-dashed-erp bg-erp px-4 py-3">
+        <h5 class="modal-title fw-bold text-erp">
+            <div class="icon-badge me-2"><i class="bi bi-person-vcard-fill"></i></div>
+            {{ crud.editingId() ? 'Editar Trabajador' : 'Nuevo Trabajador' }}
+        </h5>
+        <button type="button" class="btn-close shadow-none" (click)="modal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body p-4 bg-card">
+        <form [formGroup]="form" class="row g-3">
+
+            <div class="col-md-4">
+                <label class="form-label">DNI <span class="req-star">*</span></label>
+                <input type="text" class="form-control" formControlName="dni" maxlength="8">
+                <app-form-error [control]="form.get('dni')"></app-form-error>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Código de personal</label>
+                <input type="text" class="form-control" formControlName="codigo_personal">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Sexo</label>
+                <select class="form-select form-select-sm" formControlName="sexo">
+                    <option [ngValue]="null">Seleccionar...</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Nombres <span class="req-star">*</span></label>
+                <input type="text" class="form-control text-uppercase" formControlName="nombres"
+                       oninput="this.value = this.value.toUpperCase()">
+                <app-form-error [control]="form.get('nombres')"></app-form-error>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Apellidos <span class="req-star">*</span></label>
+                <input type="text" class="form-control text-uppercase" formControlName="apellidos"
+                       oninput="this.value = this.value.toUpperCase()">
+                <app-form-error [control]="form.get('apellidos')"></app-form-error>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Teléfono</label>
+                <input type="text" class="form-control" formControlName="telefono">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Correo</label>
+                <input type="email" class="form-control" formControlName="correo">
+                <app-form-error [control]="form.get('correo')"></app-form-error>
+            </div>
+
+            <div class="col-md-6">
+                <app-single-date-picker [formGroup]="form" controlName="fecha_nacimiento" label="Fecha de nacimiento"></app-single-date-picker>
+            </div>
+            <div class="col-md-6">
+                <app-single-date-picker [formGroup]="form" controlName="fecha_ingreso" label="Fecha de ingreso"></app-single-date-picker>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Área</label>
+                <ng-select class="ng-select-sm" [items]="areas()" bindLabel="nombre" bindValue="id_area"
+                           formControlName="id_area" placeholder="Seleccionar..." appendTo="body"
+                           notFoundText="Sin resultados">
+                </ng-select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Cargo</label>
+                <ng-select class="ng-select-sm" [items]="cargos()" bindLabel="nombre" bindValue="id_cargo"
+                           formControlName="id_cargo" placeholder="Seleccionar..." appendTo="body"
+                           notFoundText="Sin resultados">
+                </ng-select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Régimen laboral</label>
+                <ng-select class="ng-select-sm" [items]="regimenes()" bindLabel="nombre" bindValue="id_regimen"
+                           formControlName="id_regimen" placeholder="Seleccionar..." appendTo="body"
+                           notFoundText="Sin resultados">
+                </ng-select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Centro de trabajo</label>
+                <input type="text" class="form-control" formControlName="centro_trabajo">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Observaciones</label>
+                <input type="text" class="form-control" formControlName="observaciones">
+            </div>
+
+            <div class="col-12">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="consentimientoBiometrico" formControlName="consentimiento_biometrico">
+                    <label class="form-check-label" for="consentimientoBiometrico">
+                        El trabajador autoriza el tratamiento de su dato biométrico (Ley N° 29733)
+                    </label>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <div class="modal-footer bg-erp border-top-dashed-erp d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-soft-neutral" (click)="modal.dismiss()">CANCELAR</button>
+        <button type="button" class="btn btn-primary" (click)="guardar()" [disabled]="form.invalid || crud.tableLoading()">
+            <i class="bi bi-save me-1"></i> GUARDAR
+        </button>
+    </div>
+</ng-template>

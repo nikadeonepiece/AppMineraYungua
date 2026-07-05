@@ -49,6 +49,13 @@ export class Sidebar implements OnInit {
       route: '/admin/seguridad/permisos', type: 'link', permiso: 'ver_seguridad'
     },
 
+    { label: 'PERSONAL Y ASISTENCIA', type: 'header' },
+
+    {
+      label: 'Personal', icon: 'bi-people-fill',
+      route: '/personal', type: 'link', permiso: 'ver_personal'
+    },
+
     // MÓDULO: COMUNEROS (pendiente de construir)
   ];
 

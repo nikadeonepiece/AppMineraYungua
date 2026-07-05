@@ -1,0 +1,77 @@
+<app-table-pro titulo="Regímenes laborales" subtitulo="Ciclos de trabajo/descanso rotativo" btnText="NUEVO RÉGIMEN"
+    [showAddBtn]="perms.hasPermission('crear_personal')" [loading]="crud.tableLoading()"
+    [data]="crud.resource().data" [meta]="crud.resource().meta"
+    (add)="abrirModal(modalFormulario)" (pageChange)="crud.cambiarPagina($event)" (search)="onSearch($event)">
+
+    <thead thead class="text-uppercase text-muted border-bottom table-header-erp">
+        <tr>
+            <th class="ps-3 fw-bold border-0" style="width: 80px;">ID</th>
+            <th class="fw-bold border-0">NOMBRE</th>
+            <th class="fw-bold border-0 text-center">DÍAS TRABAJO</th>
+            <th class="fw-bold border-0 text-center">DÍAS DESCANSO</th>
+            <th class="text-center border-0" style="width: 120px;">ACCIONES</th>
+        </tr>
+    </thead>
+    <tbody tbody>
+        @for (item of crud.resource().data; track item.id_regimen) {
+            <tr class="main-row align-middle fila-animada">
+                <td class="ps-3 py-3"><div class="fw-bold text-primary-erp">#{{ item.id_regimen }}</div></td>
+                <td class="fw-bold text-erp text-uppercase">{{ item.nombre }}</td>
+                <td class="text-center text-muted-erp">{{ item.dias_trabajo ?? '—' }}</td>
+                <td class="text-center text-muted-erp">{{ item.dias_descanso ?? '—' }}</td>
+                <td class="text-center">
+                    <div class="d-flex justify-content-center gap-2">
+                        @if (perms.hasPermission('editar_personal')) {
+                            <button type="button" class="btn-action-edit" (click)="abrirModal(modalFormulario, item)">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                        }
+                        @if (perms.hasPermission('eliminar_personal')) {
+                            <button type="button" class="btn-action-delete" (click)="eliminar(item)">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        }
+                    </div>
+                </td>
+            </tr>
+        } @empty {
+            <tr><td colspan="5" class="text-center py-5 text-muted-erp">No hay regímenes registrados.</td></tr>
+        }
+    </tbody>
+</app-table-pro>
+
+<ng-template #modalFormulario let-modal>
+    <div class="modal-header border-bottom-dashed-erp bg-erp px-4 py-3">
+        <h5 class="modal-title fw-bold text-erp">
+            <div class="icon-badge me-2"><i class="bi bi-arrow-repeat"></i></div>
+            {{ crud.editingId() ? 'Editar Régimen' : 'Nuevo Régimen' }}
+        </h5>
+        <button type="button" class="btn-close shadow-none" (click)="modal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body p-4 bg-card">
+        <form [formGroup]="form" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Nombre <span class="req-star">*</span></label>
+                <input type="text" class="form-control text-uppercase" formControlName="nombre"
+                       oninput="this.value = this.value.toUpperCase()" placeholder="Ej. 14X7">
+                <app-form-error [control]="form.get('nombre')"></app-form-error>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Días de trabajo</label>
+                <input type="number" min="1" class="form-control" formControlName="dias_trabajo">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Días de descanso</label>
+                <input type="number" min="1" class="form-control" formControlName="dias_descanso">
+            </div>
+        </form>
+    </div>
+
+    <div class="modal-footer bg-erp border-top-dashed-erp d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-soft-neutral" (click)="modal.dismiss()">CANCELAR</button>
+        <button type="button" class="btn btn-primary" (click)="guardar()" [disabled]="form.invalid || crud.tableLoading()">
+            <i class="bi bi-save me-1"></i> GUARDAR
+        </button>
+    </div>
+</ng-template>

@@ -28,4 +28,16 @@ export class PermisosService {
   savePermisos(idRol: number, accionesIds: number[]): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/roles/${idRol}/permisos`, { accionesIds });
   }
+
+  createRol(data: { nombre: string; descripcion?: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/roles`, data);
+  }
+
+  updateRol(idRol: number, data: { nombre: string; descripcion?: string }): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/roles/${idRol}`, data);
+  }
+
+  deleteRol(idRol: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/roles/${idRol}`);
+  }
 }

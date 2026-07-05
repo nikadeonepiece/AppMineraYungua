@@ -26,6 +26,7 @@ export const routes: Routes = [
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent), canActivate: [permissionGuard], data: { permiso: 'ver_dashboard' } },
       { path: 'admin/seguridad/permisos', loadComponent: () => import('./features/permisos/permisos.component').then(m => m.PermisosComponent), canActivate: [permissionGuard], data: { permiso: 'ver_seguridad' } },
       { path: 'admin/usuarios', loadComponent: () => import('./features/usuarios/usuarios.component').then(m => m.UsuariosComponent), canActivate: [permissionGuard], data: { permiso: 'ver_usuario' } },
+      { path: 'personal', loadComponent: () => import('./features/personal/personal-page.component').then(m => m.PersonalPageComponent), canActivate: [permissionGuard], data: { permiso: 'ver_personal' } },
 
       // MÓDULO: COMUNEROS (pendiente de construir)
 
