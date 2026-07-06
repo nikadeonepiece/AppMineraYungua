@@ -27,6 +27,7 @@ import { ComuneroModule } from './erp/comuneros/comunero/comunero.module';
 import { ParcelaModule } from './erp/comuneros/parcela/parcela.module';
 import { CertificadoPosesionModule } from './erp/comuneros/certificado-posesion/certificado-posesion.module';
 import { AsambleaModule } from './erp/comuneros/asamblea/asamblea.module';
+import { FotocheckModule } from './erp/comuneros/fotocheck/fotocheck.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { AsambleaModule } from './erp/comuneros/asamblea/asamblea.module';
     ParcelaModule,
     CertificadoPosesionModule,
     AsambleaModule,
+    FotocheckModule,
   ],
   controllers: [ApiController],
   providers: [ApiService],

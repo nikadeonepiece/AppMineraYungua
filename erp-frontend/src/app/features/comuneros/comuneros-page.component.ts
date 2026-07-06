@@ -5,13 +5,14 @@ import { CaseriosComponent } from './caserios/caserios.component';
 import { ComunerosComponent } from './comuneros/comuneros.component';
 import { ParcelasComponent } from './parcelas/parcelas.component';
 import { CertificadosPosesionComponent } from './certificados-posesion/certificados-posesion.component';
+import { FotocheckComponent } from './fotocheck/fotocheck.component';
 
 @Component({
   selector: 'app-comuneros-page',
   standalone: true,
   imports: [
     ErpTabsComponent, ComunidadCampesinaComponent, CaseriosComponent, ComunerosComponent,
-    ParcelasComponent, CertificadosPosesionComponent,
+    ParcelasComponent, CertificadosPosesionComponent, FotocheckComponent,
   ],
   template: `
     <div class="container-fluid p-3 p-md-4 form-wrapper mx-auto" style="max-width: var(--erp-max-width);">
@@ -24,6 +25,7 @@ import { CertificadosPosesionComponent } from './certificados-posesion/certifica
           @case ('comuneros') { <app-comuneros /> }
           @case ('parcelas') { <app-parcelas /> }
           @case ('certificados-posesion') { <app-certificados-posesion /> }
+          @case ('fotocheck') { <app-fotocheck /> }
         }
       </div>
     </div>
@@ -39,5 +41,6 @@ export class ComunerosPageComponent {
     { id: 'comuneros', label: 'Comuneros', icon: 'bi-person-badge-fill' },
     { id: 'parcelas', label: 'Parcelas', icon: 'bi-map-fill' },
     { id: 'certificados-posesion', label: 'Certificados de Posesión', icon: 'bi-file-earmark-check-fill' },
+    { id: 'fotocheck', label: 'Generar Fotocheck', icon: 'bi-person-vcard-fill' },
   ];
 }

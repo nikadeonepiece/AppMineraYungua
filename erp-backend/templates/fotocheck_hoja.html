@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Fotocheck - Comunidad Campesina Chuyugual</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: A4 portrait; margin: 6mm; }
+  body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; background: #fff; }
+
+  .sheet {
+    width: 100%;
+    page-break-after: always;
+    break-after: page;
+  }
+  .sheet:last-child { page-break-after: auto; break-after: auto; }
+
+  .page-title {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #1f4d12;
+    margin-bottom: 3mm;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2.5mm;
+    height: 272mm;
+  }
+
+  .card-empty {
+    border: 1px dashed #d0d0d0;
+    border-radius: 10px;
+    background: #fafafa;
+  }
+
+  .card {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #b8d4a8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 0;
+    padding-bottom: 0;
+  }
+
+  .card-deco {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .card-deco-tl {
+    top: 0; left: 0;
+    width: 28mm; height: 22mm;
+    background: radial-gradient(ellipse at 0% 0%, #a8d84a 0%, transparent 68%),
+                radial-gradient(ellipse at 30% 10%, #2d6b1e 0%, transparent 55%);
+    opacity: 0.85;
+    border-radius: 10px 0 40% 0;
+  }
+  .card-deco-b {
+    bottom: 0; left: 0; right: 0;
+    height: 18mm;
+    background: linear-gradient(135deg, #2d6b1e 0%, #4a8f2a 40%, #a8d84a 100%);
+    opacity: 0.18;
+    border-radius: 0 0 10px 10px;
+  }
+
+  .card-slot {
+    width: 10mm;
+    height: 2mm;
+    background: #ccc;
+    border-radius: 1mm;
+    margin: 2mm auto 1mm;
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-logo-wrap {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 1.5mm;
+  }
+  .card-logo {
+    width: 16mm;
+    height: 16mm;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid #2d6b1e;
+    background: #fff;
+  }
+  .card-logo-fallback {
+    width: 16mm;
+    height: 16mm;
+    border-radius: 50%;
+    background: #2d6b1e;
+    color: #fff;
+    font-size: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: bold;
+    line-height: 1.1;
+    border: 1.5px solid #1f4d12;
+  }
+
+  .foto-wrap {
+    position: relative;
+    z-index: 1;
+    width: 20mm;
+    height: 24mm;
+    border: 2px solid #2d6b1e;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1.5mm;
+    background: #f0f4ec;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .foto-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .foto-placeholder {
+    font-size: 5px;
+    color: #888;
+    text-align: center;
+    padding: 2px;
+  }
+
+  .nombre {
+    position: relative;
+    z-index: 1;
+    font-size: 7px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #1f4d12;
+    line-height: 1.15;
+    text-align: center;
+    padding: 0 2mm;
+    max-height: 11mm;
+    overflow: hidden;
+    margin-bottom: 1mm;
+  }
+
+  .sep {
+    position: relative;
+    z-index: 1;
+    width: 70%;
+    height: 1px;
+    background: #2d6b1e;
+    margin-bottom: 1mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sep::after {
+    content: '';
+    width: 3px;
+    height: 3px;
+    background: #2d6b1e;
+    border-radius: 50%;
+    position: absolute;
+  }
+
+  .cargo {
+    position: relative;
+    z-index: 1;
+    font-size: 6px;
+    font-weight: 700;
+    color: #2d6b1e;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 1.5mm;
+  }
+
+  .qr-wrap {
+    position: relative;
+    z-index: 1;
+    width: 18mm;
+    height: 18mm;
+    border: 1px solid #333;
+    padding: 0.5mm;
+    background: #fff;
+    margin-bottom: 1mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .qr-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .dni {
+    position: relative;
+    z-index: 1;
+    font-size: 6px;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 1.5mm;
+  }
+
+  .codigo-bar {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    margin-top: auto;
+    background: #2d6b1e;
+    color: #fff;
+    font-size: 5.5px;
+    font-weight: 800;
+    text-align: center;
+    padding: 1.5mm 1mm;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    border-radius: 0 0 9px 9px;
+  }
+</style>
+</head>
+<body>
+{{PAGES}}
+</body>
+</html>

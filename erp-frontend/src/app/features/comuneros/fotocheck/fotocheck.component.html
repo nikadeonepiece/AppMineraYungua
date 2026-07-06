@@ -1,0 +1,161 @@
+<div class="fotocheck-wrapper">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <div class="icon-badge"><i class="bi bi-person-vcard-fill"></i></div>
+      <div>
+        <h5 class="m-0 fw-bold erp-title-section">Generar Fotocheck</h5>
+        <span class="text-muted-erp text-xs-erp">Carnets comunales — 9 por hoja (posiciones 1-2-3 / 4-5-6 / 7-8-9)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 bg-light-subtle p-3 mb-3">
+    <form [formGroup]="filtroForm" class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label mb-1 fw-semibold">1. Seleccionar caserío</label>
+        @if (listasListas()) {
+          <ng-select class="ng-select-sm" [items]="caserios()" bindLabel="nombre" bindValue="id_caserio"
+                     formControlName="id_caserio" placeholder="Elija un caserío..." appendTo="body"
+                     notFoundText="Sin caseríos" [clearable]="true">
+          </ng-select>
+        }
+        @if (caserioActivo()) {
+          <div class="text-xs-erp text-muted-erp mt-1">
+            <i class="bi bi-people-fill me-1"></i>
+            {{ meta().total }} comuneros en <strong>{{ caserioActivo()?.nombre }}</strong>
+          </div>
+        }
+      </div>
+      <div class="col-md-6">
+        <label class="form-label mb-1 fw-semibold">2. Buscar comunero del caserío</label>
+        @if (listasListas()) {
+          <ng-select class="ng-select-sm" [items]="comunerosLista()" bindLabel="apellidos_nombres" bindValue="id_comunero"
+                     formControlName="id_comunero_filtro" placeholder="DNI o nombre..."
+                     appendTo="body" [clearable]="true" [loading]="loadingLista()"
+                     [searchFn]="sinFiltroLocal"
+                     [disabled]="!idCaserioSeleccionado()"
+                     (search)="buscarComunero($event.term)" (open)="buscarComunero('')"
+                     notFoundText="Sin comuneros en este caserío">
+            <ng-template ng-option-tmp let-item="item">
+              <div class="fw-semibold text-uppercase">{{ item.apellidos_nombres }}</div>
+              <small class="text-muted">DNI: {{ item.dni || '—' }} · Padrón: {{ item.numero_padron ?? '—' }}</small>
+            </ng-template>
+          </ng-select>
+        }
+        <div class="text-xs-erp text-muted-erp mt-1">
+          Use este listado para ubicar comuneros. Marque en la tabla inferior los que desea incluir (máx. 9).
+        </div>
+      </div>
+    </form>
+  </div>
+
+  @if (idCaserioSeleccionado()) {
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <button type="button" class="btn btn-pdf btn-sm" (click)="generarPdfSeleccion(true)"
+              [disabled]="cantidadSeleccionados() === 0 || generandoPdf()">
+        <i class="bi bi-eye me-1"></i> Ver PDF selección ({{ cantidadSeleccionados() }}/9)
+      </button>
+      <button type="button" class="btn btn-primary btn-sm" (click)="generarPdfSeleccion(false)"
+              [disabled]="cantidadSeleccionados() === 0 || generandoPdf()">
+        <i class="bi bi-download me-1"></i> Descargar selección
+      </button>
+      <button type="button" class="btn btn-outline-primary btn-sm" (click)="generarPdfCaserioCompleto(true)"
+              [disabled]="meta().total === 0 || generandoPdf()">
+        <i class="bi bi-eye me-1"></i> {{ generandoPdf() ? 'Generando...' : 'Ver PDF caserío completo' }}
+      </button>
+      <button type="button" class="btn btn-success btn-sm" (click)="generarPdfCaserioCompleto(false)"
+              [disabled]="meta().total === 0 || generandoPdf()">
+        <i class="bi bi-file-earmark-pdf me-1"></i> {{ generandoPdf() ? 'Generando...' : 'Descargar caserío completo' }}
+      </button>
+      @if (cantidadSeleccionados() > 0) {
+        <button type="button" class="btn btn-soft-neutral btn-sm" (click)="limpiarSeleccion()">
+          Limpiar selección
+        </button>
+      }
+    </div>
+
+    <div class="card-pro table-pro-container p-0 overflow-hidden">
+      @if (loading()) {
+        <div class="progress table-loading-bar">
+          <div class="progress-bar progress-bar-striped progress-bar-animated w-100"></div>
+        </div>
+      }
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" [class.opacity-50]="loading()">
+          <thead class="text-uppercase text-muted border-bottom table-header-erp">
+            <tr>
+              <th class="ps-3 border-0 text-center" style="width: 50px;">
+                <input type="checkbox" class="form-check-input"
+                       [checked]="haySeleccionEnPagina()"
+                       (change)="toggleSeleccionarPagina()"
+                       title="Seleccionar todos en esta página (máx. 9)">
+              </th>
+              <th class="border-0 fw-bold">COMUNERO</th>
+              <th class="border-0 fw-bold">DNI</th>
+              <th class="border-0 fw-bold text-center">N° PADRÓN</th>
+              <th class="border-0 fw-bold text-center">FOTO</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of comuneros(); track item.id_comunero) {
+              <tr class="fila-animada" [class.table-active]="estaSeleccionado(item.id_comunero)">
+                <td class="ps-3 text-center">
+                  <input type="checkbox" class="form-check-input"
+                         [checked]="estaSeleccionado(item.id_comunero)"
+                         [disabled]="!estaSeleccionado(item.id_comunero) && !puedeAgregarMas()"
+                         (change)="toggleSeleccion(item)">
+                </td>
+                <td class="fw-bold text-erp text-uppercase">{{ item.apellidos_nombres }}</td>
+                <td class="font-numeric-erp text-muted-erp">{{ item.dni || '—' }}</td>
+                <td class="text-center font-numeric-erp">{{ item.numero_padron ?? '—' }}</td>
+                <td class="text-center">
+                  @if (item.foto) {
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                  } @else {
+                    <span class="text-muted-erp text-xs-erp">Sin foto</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="text-center py-5 text-muted-erp">
+                  No hay comuneros en este caserío.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (meta().total > 0) {
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-2 gap-2 border-top">
+          <span class="text-xs-erp text-muted-erp">
+            Mostrando {{ comuneros().length }} de {{ meta().total }} — seleccionados: {{ cantidadSeleccionados() }}/9
+          </span>
+          <ngb-pagination
+            [collectionSize]="meta().total"
+            [page]="meta().page"
+            [pageSize]="meta().limit"
+            (pageChange)="cambiarPagina($event)"
+            [maxSize]="3"
+            [rotate]="true"
+            [ellipses]="false"
+            class="mb-0">
+          </ngb-pagination>
+        </div>
+      }
+    </div>
+
+    <div class="alert alert-info border-0 mt-3 text-xs-erp mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      <strong>Selección manual:</strong> elija de 1 a 9 comuneros en la tabla y genere una hoja.
+      <strong>Caserío completo:</strong> genera todas las hojas necesarias (9 fotocheck por página) para imprimir el padrón entero.
+    </div>
+  } @else {
+    <div class="text-center py-5 text-muted-erp">
+      <i class="bi bi-signpost-split display-6 d-block mb-2 opacity-50"></i>
+      Seleccione un caserío para ver la lista de comuneros y generar fotochecks.
+    </div>
+  }
+</div>
