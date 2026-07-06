@@ -50,6 +50,7 @@
   </div>
 
   @if (idCaserioSeleccionado()) {
+    @if (perms.hasPermission('generar_fotocheck')) {
     <div class="d-flex flex-wrap gap-2 mb-3">
       <button type="button" class="btn btn-pdf btn-sm" (click)="generarPdfSeleccion(true)"
               [disabled]="cantidadSeleccionados() === 0 || generandoPdf()">
@@ -73,6 +74,11 @@
         </button>
       }
     </div>
+    } @else {
+      <div class="alert alert-warning py-2 mb-3">
+        Puede consultar el listado, pero no tiene permiso para generar PDF de fotocheck.
+      </div>
+    }
 
     <div class="card-pro table-pro-container p-0 overflow-hidden">
       @if (loading()) {

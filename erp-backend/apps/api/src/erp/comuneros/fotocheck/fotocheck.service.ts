@@ -109,7 +109,9 @@ export class FotocheckService {
       ? `Fotocheck_${slug}_seleccion`
       : `Fotocheck_${slug}_completo`;
 
-    await this.pdfService.generarPdfPorHojas(hojasHtml, nombreArchivo, res);
+    await this.pdfService.generarPdfPorHojas(hojasHtml, nombreArchivo, res, {
+      sinMargenPagina: true,
+    });
   }
 
   private getTemplate(): string {

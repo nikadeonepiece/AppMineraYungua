@@ -12,9 +12,16 @@ export class PdfService {
     '--allow-file-access-from-files',
   ];
 
-  async generarPdf(html: string, nombreArchivo: string, res: Response) {
+  private readonly marginCero = { top: '0', right: '0', bottom: '0', left: '0' };
+
+  async generarPdf(
+    html: string,
+    nombreArchivo: string,
+    res: Response,
+    options?: { sinMargenPagina?: boolean },
+  ) {
     try {
-      const pdfBuffer = await this.renderHtmlToPdf(html);
+      const pdfBuffer = await this.renderHtmlToPdf(html, options?.sinMargenPagina);
       this.enviarPdf(res, nombreArchivo, pdfBuffer);
     } catch (error) {
       console.error('Error generando PDF genérico:', error);
@@ -22,13 +29,22 @@ export class PdfService {
     }
   }
 
-  async generarPdfPorHojas(hojasHtml: string[], nombreArchivo: string, res: Response) {
+  async generarPdfPorHojas(
+    hojasHtml: string[],
+    nombreArchivo: string,
+    res: Response,
+    options?: { sinMargenPagina?: boolean },
+  ) {
     if (hojasHtml.length === 0) {
       throw new InternalServerErrorException('No hay contenido para generar el PDF');
     }
     if (hojasHtml.length === 1) {
-      return this.generarPdf(hojasHtml[0], nombreArchivo, res);
+      return this.generarPdf(hojasHtml[0], nombreArchivo, res, options);
     }
+
+    const margin = options?.sinMargenPagina
+      ? this.marginCero
+      : { top: '6px', bottom: '6px', left: '6px', right: '6px' };
 
     try {
       const browser = await puppeteer.launch({ headless: true, args: this.launchArgs });
@@ -41,7 +57,7 @@ export class PdfService {
         const buf = await page.pdf({
           format: 'A4',
           printBackground: true,
-          margin: { top: '6px', bottom: '6px', left: '6px', right: '6px' },
+          margin,
         });
         await page.close();
 
@@ -59,15 +75,18 @@ export class PdfService {
     }
   }
 
-  private async renderHtmlToPdf(html: string): Promise<Buffer> {
+  private async renderHtmlToPdf(html: string, sinMargenPagina = false): Promise<Buffer> {
     const browser = await puppeteer.launch({ headless: true, args: this.launchArgs });
     const page = await browser.newPage();
     await page.setDefaultTimeout(300_000);
     await page.setContent(html, { waitUntil: 'load' });
+    const margin = sinMargenPagina
+      ? this.marginCero
+      : { top: '6px', bottom: '6px', left: '6px', right: '6px' };
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
-      margin: { top: '6px', bottom: '6px', left: '6px', right: '6px' },
+      margin,
     });
     await browser.close();
     return Buffer.from(pdfBuffer);

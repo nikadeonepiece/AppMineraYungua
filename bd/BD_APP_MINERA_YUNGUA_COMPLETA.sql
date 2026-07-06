@@ -128,7 +128,14 @@ INSERT INTO `sis_accion` (`id_accion`, `id_modulo`, `codigo_accion`, `descripcio
 (16, 4, 'eliminar_personal', 'Eliminar personal', 'DELETE'),
 (17, 4, 'ver_asistencia_diaria', 'Ver resumen de asistencia diaria', 'READ'),
 (18, 4, 'marcar_asistencia', 'Marcar asistencia (entrada/salida) de personal', 'SPECIAL'),
-(19, 5, 'ver_dashboard', 'Ver el dashboard con resumen de datos', 'READ');
+(19, 5, 'ver_dashboard', 'Ver el dashboard con resumen de datos', 'READ'),
+(20, 3, 'ver_certificado_posesion', 'Ver certificados de posesión', 'READ'),
+(21, 3, 'crear_certificado_posesion', 'Registrar certificado de posesión', 'CREATE'),
+(22, 3, 'editar_certificado_posesion', 'Editar certificado de posesión', 'UPDATE'),
+(23, 3, 'eliminar_certificado_posesion', 'Eliminar certificado de posesión', 'DELETE'),
+(24, 3, 'exportar_certificado_posesion', 'Generar PDF de certificado de posesión', 'SPECIAL'),
+(25, 3, 'ver_fotocheck', 'Ver módulo de generación de fotocheck', 'READ'),
+(26, 3, 'generar_fotocheck', 'Generar PDF de fotocheck', 'SPECIAL');
 
 INSERT INTO `sis_permiso` (`id_rol`, `id_accion`)
 SELECT 1, id_accion FROM `sis_accion`;
@@ -8831,3 +8838,51 @@ SET @sql_fk_personal_comunero = IF(
 PREPARE stmt_fk_personal_comunero FROM @sql_fk_personal_comunero;
 EXECUTE stmt_fk_personal_comunero;
 DEALLOCATE PREPARE stmt_fk_personal_comunero;
+
+-- ==============================================================================
+-- MIGRACIÓN: permisos Certificado de Posesión y Fotocheck (módulo COMUNEROS)
+-- Idempotente: segura en BD nueva o existente.
+-- ==============================================================================
+
+INSERT INTO `sis_accion` (`id_accion`, `id_modulo`, `codigo_accion`, `descripcion`, `tipo_operacion`)
+SELECT * FROM (
+  SELECT 20 AS id_accion, 3 AS id_modulo, 'ver_certificado_posesion' AS codigo_accion, 'Ver certificados de posesión' AS descripcion, 'READ' AS tipo_operacion
+  UNION ALL SELECT 21, 3, 'crear_certificado_posesion', 'Registrar certificado de posesión', 'CREATE'
+  UNION ALL SELECT 22, 3, 'editar_certificado_posesion', 'Editar certificado de posesión', 'UPDATE'
+  UNION ALL SELECT 23, 3, 'eliminar_certificado_posesion', 'Eliminar certificado de posesión', 'DELETE'
+  UNION ALL SELECT 24, 3, 'exportar_certificado_posesion', 'Generar PDF de certificado de posesión', 'SPECIAL'
+  UNION ALL SELECT 25, 3, 'ver_fotocheck', 'Ver módulo de generación de fotocheck', 'READ'
+  UNION ALL SELECT 26, 3, 'generar_fotocheck', 'Generar PDF de fotocheck', 'SPECIAL'
+) AS nuevas
+WHERE NOT EXISTS (
+  SELECT 1 FROM `sis_accion` a WHERE a.id_modulo = nuevas.id_modulo AND a.codigo_accion = nuevas.codigo_accion
+);
+
+INSERT IGNORE INTO `sis_permiso` (`id_rol`, `id_accion`)
+SELECT 1, id_accion FROM `sis_accion` WHERE id_accion BETWEEN 20 AND 26;
+
+INSERT IGNORE INTO `sis_permiso` (`id_rol`, `id_accion`)
+SELECT p.id_rol, na.id_accion
+FROM `sis_permiso` p
+INNER JOIN `sis_accion` o ON p.id_accion = o.id_accion AND o.codigo_accion = 'ver_comunero'
+INNER JOIN `sis_accion` na ON na.codigo_accion IN (
+  'ver_certificado_posesion', 'ver_fotocheck', 'exportar_certificado_posesion', 'generar_fotocheck'
+);
+
+INSERT IGNORE INTO `sis_permiso` (`id_rol`, `id_accion`)
+SELECT p.id_rol, na.id_accion
+FROM `sis_permiso` p
+INNER JOIN `sis_accion` o ON p.id_accion = o.id_accion AND o.codigo_accion = 'crear_comunero'
+INNER JOIN `sis_accion` na ON na.codigo_accion = 'crear_certificado_posesion';
+
+INSERT IGNORE INTO `sis_permiso` (`id_rol`, `id_accion`)
+SELECT p.id_rol, na.id_accion
+FROM `sis_permiso` p
+INNER JOIN `sis_accion` o ON p.id_accion = o.id_accion AND o.codigo_accion = 'editar_comunero'
+INNER JOIN `sis_accion` na ON na.codigo_accion = 'editar_certificado_posesion';
+
+INSERT IGNORE INTO `sis_permiso` (`id_rol`, `id_accion`)
+SELECT p.id_rol, na.id_accion
+FROM `sis_permiso` p
+INNER JOIN `sis_accion` o ON p.id_accion = o.id_accion AND o.codigo_accion = 'eliminar_comunero'
+INNER JOIN `sis_accion` na ON na.codigo_accion = 'eliminar_certificado_posesion';

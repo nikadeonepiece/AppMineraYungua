@@ -8,13 +8,13 @@ import { FotocheckService } from './fotocheck.service';
 export class FotocheckController {
   constructor(private readonly fotocheckService: FotocheckService) {}
 
-  @RequirePermissions('COMUNEROS', 'ver_comunero')
+  @RequirePermissions('COMUNEROS', 'ver_fotocheck')
   @Get('comuneros')
   findComuneros(@Query() query: any) {
     return this.fotocheckService.findComunerosByCaserio(query);
   }
 
-  @RequirePermissions('COMUNEROS', 'ver_comunero')
+  @RequirePermissions('COMUNEROS', 'generar_fotocheck')
   @Get('pdf')
   async exportarPdf(@Query() query: any, @Res() res: Response) {
     await this.fotocheckService.exportarPdf(query, res);

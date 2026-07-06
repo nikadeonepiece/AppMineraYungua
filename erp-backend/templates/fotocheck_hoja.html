@@ -4,51 +4,84 @@
 <meta charset="UTF-8">
 <title>Fotocheck - Comunidad Campesina Chuyugual</title>
 <style>
+  /*
+   * A4: 210mm × 297mm
+   * Fotocheck: 53mm × 85mm (5,3cm × 8,5cm)
+   * Márgenes laterales y hueco horizontal entre tarjetas: 12,75mm (1,275cm)
+   * Márgenes superior/inferior y hueco vertical entre tarjetas: 10,5mm (1,05cm)
+   * Distribución: 3 × 3 = 9 fotochecks por hoja
+   */
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  @page { size: A4 portrait; margin: 6mm; }
-  body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; background: #fff; }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    width: 210mm;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    background: #fff;
+  }
 
   .sheet {
-    width: 100%;
+    width: 210mm;
+    height: 297mm;
+    position: relative;
     page-break-after: always;
     break-after: page;
+    overflow: hidden;
   }
   .sheet:last-child { page-break-after: auto; break-after: auto; }
 
   .page-title {
+    position: absolute;
+    top: 2mm;
+    left: 12.75mm;
+    right: 12.75mm;
     text-align: center;
-    font-size: 10px;
+    font-size: 6px;
     font-weight: 700;
     color: #1f4d12;
-    margin-bottom: 3mm;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
     text-transform: uppercase;
+    line-height: 1.2;
+    z-index: 2;
+    pointer-events: none;
   }
 
   .grid {
+    width: 210mm;
+    height: 297mm;
+    padding: 10.5mm 12.75mm;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 2.5mm;
-    height: 272mm;
+    grid-template-columns: repeat(3, 53mm);
+    grid-template-rows: repeat(3, 85mm);
+    column-gap: 12.75mm;
+    row-gap: 10.5mm;
   }
 
   .card-empty {
+    width: 53mm;
+    height: 85mm;
     border: 1px dashed #d0d0d0;
-    border-radius: 10px;
+    border-radius: 8px;
     background: #fafafa;
   }
 
   .card {
     position: relative;
-    border-radius: 10px;
+    width: 53mm;
+    height: 85mm;
+    border-radius: 8px;
     overflow: hidden;
     background: #fff;
     border: 1px solid #b8d4a8;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 0;
     padding-bottom: 0;
   }
 
@@ -59,26 +92,26 @@
   }
   .card-deco-tl {
     top: 0; left: 0;
-    width: 28mm; height: 22mm;
+    width: 22mm; height: 18mm;
     background: radial-gradient(ellipse at 0% 0%, #a8d84a 0%, transparent 68%),
                 radial-gradient(ellipse at 30% 10%, #2d6b1e 0%, transparent 55%);
     opacity: 0.85;
-    border-radius: 10px 0 40% 0;
+    border-radius: 8px 0 40% 0;
   }
   .card-deco-b {
     bottom: 0; left: 0; right: 0;
-    height: 18mm;
+    height: 14mm;
     background: linear-gradient(135deg, #2d6b1e 0%, #4a8f2a 40%, #a8d84a 100%);
     opacity: 0.18;
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 8px 8px;
   }
 
   .card-slot {
-    width: 10mm;
-    height: 2mm;
+    width: 9mm;
+    height: 1.5mm;
     background: #ccc;
     border-radius: 1mm;
-    margin: 2mm auto 1mm;
+    margin: 1.5mm auto 1mm;
     position: relative;
     z-index: 1;
   }
@@ -86,23 +119,23 @@
   .card-logo-wrap {
     position: relative;
     z-index: 1;
-    margin-bottom: 1.5mm;
+    margin-bottom: 1mm;
   }
   .card-logo {
-    width: 16mm;
-    height: 16mm;
+    width: 13mm;
+    height: 13mm;
     border-radius: 50%;
     object-fit: cover;
     border: 1.5px solid #2d6b1e;
     background: #fff;
   }
   .card-logo-fallback {
-    width: 16mm;
-    height: 16mm;
+    width: 13mm;
+    height: 13mm;
     border-radius: 50%;
     background: #2d6b1e;
     color: #fff;
-    font-size: 5px;
+    font-size: 4.5px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -115,12 +148,12 @@
   .foto-wrap {
     position: relative;
     z-index: 1;
-    width: 20mm;
-    height: 24mm;
+    width: 17mm;
+    height: 21mm;
     border: 2px solid #2d6b1e;
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
-    margin-bottom: 1.5mm;
+    margin-bottom: 1mm;
     background: #f0f4ec;
     display: flex;
     align-items: center;
@@ -132,7 +165,7 @@
     object-fit: cover;
   }
   .foto-placeholder {
-    font-size: 5px;
+    font-size: 4.5px;
     color: #888;
     text-align: center;
     padding: 2px;
@@ -141,16 +174,16 @@
   .nombre {
     position: relative;
     z-index: 1;
-    font-size: 7px;
+    font-size: 6px;
     font-weight: 800;
     text-transform: uppercase;
     color: #1f4d12;
-    line-height: 1.15;
+    line-height: 1.12;
     text-align: center;
-    padding: 0 2mm;
-    max-height: 11mm;
+    padding: 0 1.5mm;
+    max-height: 8mm;
     overflow: hidden;
-    margin-bottom: 1mm;
+    margin-bottom: 0.8mm;
   }
 
   .sep {
@@ -159,7 +192,7 @@
     width: 70%;
     height: 1px;
     background: #2d6b1e;
-    margin-bottom: 1mm;
+    margin-bottom: 0.8mm;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -176,23 +209,23 @@
   .cargo {
     position: relative;
     z-index: 1;
-    font-size: 6px;
+    font-size: 5.5px;
     font-weight: 700;
     color: #2d6b1e;
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    margin-bottom: 1.5mm;
+    margin-bottom: 1mm;
   }
 
   .qr-wrap {
     position: relative;
     z-index: 1;
-    width: 18mm;
-    height: 18mm;
+    width: 15mm;
+    height: 15mm;
     border: 1px solid #333;
-    padding: 0.5mm;
+    padding: 0.4mm;
     background: #fff;
-    margin-bottom: 1mm;
+    margin-bottom: 0.8mm;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -206,10 +239,10 @@
   .dni {
     position: relative;
     z-index: 1;
-    font-size: 6px;
+    font-size: 5.5px;
     font-weight: 600;
     color: #222;
-    margin-bottom: 1.5mm;
+    margin-bottom: 1mm;
   }
 
   .codigo-bar {
@@ -219,13 +252,13 @@
     margin-top: auto;
     background: #2d6b1e;
     color: #fff;
-    font-size: 5.5px;
+    font-size: 5px;
     font-weight: 800;
     text-align: center;
-    padding: 1.5mm 1mm;
-    letter-spacing: 0.3px;
+    padding: 1.2mm 0.8mm;
+    letter-spacing: 0.2px;
     text-transform: uppercase;
-    border-radius: 0 0 9px 9px;
+    border-radius: 0 0 7px 7px;
   }
 </style>
 </head>
