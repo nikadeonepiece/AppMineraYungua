@@ -1,4 +1,4 @@
-import { Component, inject, computed, OnInit } from '@angular/core';
+import { Component, inject, computed, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -31,6 +31,7 @@ export class Sidebar implements OnInit {
   isSidebarOpen = this.layoutService.sidebarOpen;
 
   usuarioActual: any = null;
+  logoError = signal(false);
 
   private rawMenu: any[] = [
     {

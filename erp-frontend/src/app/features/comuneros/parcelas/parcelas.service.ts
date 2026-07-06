@@ -8,9 +8,10 @@ export class ParcelasService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrlGestion}/comuneros/parcelas`;
 
-  findAll(page: number, limit: number, search: string): Observable<any> {
+  findAll(page: number, limit: number, search: string, idComunero?: number | null): Observable<any> {
     let params = new HttpParams().set('page', page).set('limit', limit);
     if (search) params = params.set('search', search);
+    if (idComunero) params = params.set('id_comunero', idComunero);
     return this.http.get(this.apiUrl, { params });
   }
 

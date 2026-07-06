@@ -17,6 +17,11 @@ export class CreateParcelaDto {
   denominacion?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  sector?: string;
+
+  @IsOptional()
   @IsNumber()
   @IsPositive()
   hectareas?: number;

@@ -1,10 +1,14 @@
 <!-- LOGO -->
 <div class="sidebar-logo">
   <div class="d-flex align-items-center gap-2">
-    <i class="bi bi-geo-alt-fill logo-icon"></i>
+    @if (!logoError()) {
+      <img src="assets/img/logo.png" alt="Logo" class="sidebar-logo-img" (error)="logoError.set(true)">
+    } @else {
+      <i class="bi bi-geo-alt-fill logo-icon"></i>
+    }
     <div>
-      <div class="logo-text">MINERA YUNGUA</div>
-      <div class="logo-sub">App Minera Yungua</div>
+      <div class="logo-text">COMUNIDAD CAMPESINA CHUYUGUAL</div>
+      <div class="logo-sub">Sistema de Gestión Comunal</div>
     </div>
   </div>
   <button class="btn btn-sm text-white d-lg-none p-0" (click)="layoutService.toggleSidebar()">

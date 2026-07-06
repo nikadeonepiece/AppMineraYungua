@@ -1,3 +1,39 @@
+<div class="card border-0 bg-light-subtle p-3 mb-3">
+    <div class="fw-bold text-erp mb-2"><i class="bi bi-file-earmark-pdf me-1"></i> Exportar Certificado de Posesión (PDF)</div>
+    <form [formGroup]="exportForm" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label mb-1">Buscar comunero</label>
+            <ng-select class="ng-select-sm" [items]="comuneros()" bindLabel="apellidos_nombres" bindValue="id_comunero"
+                       formControlName="id_comunero" placeholder="DNI o nombre..." appendTo="body"
+                       (search)="buscarComunero($event.term)" (open)="buscarComunero('')"
+                       notFoundText="Sin resultados" [clearable]="true">
+                <ng-template ng-option-tmp let-item="item">
+                    <div class="fw-semibold text-uppercase">{{ item.apellidos_nombres }}</div>
+                    <small class="text-muted">DNI: {{ item.dni }}</small>
+                </ng-template>
+            </ng-select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label mb-1">Parcela del comunero</label>
+            <ng-select class="ng-select-sm" [items]="parcelasExport()" bindLabel="etiqueta" bindValue="id_parcela"
+                       formControlName="id_parcela" placeholder="Seleccionar parcela..." appendTo="body"
+                       [disabled]="!exportForm.get('id_comunero')?.value"
+                       notFoundText="Sin parcelas" [clearable]="false">
+            </ng-select>
+        </div>
+        <div class="col-md-2">
+            <app-single-date-picker [formGroup]="exportForm" controlName="fecha_emision" label="Fecha emisión"></app-single-date-picker>
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-pdf w-100" (click)="exportarPdf()"
+                    [disabled]="exportForm.invalid || exportandoPdf()">
+                <i class="bi bi-file-earmark-pdf me-1"></i>
+                {{ exportandoPdf() ? 'Generando...' : 'EXPORTAR PDF' }}
+            </button>
+        </div>
+    </form>
+</div>
+
 <app-table-pro titulo="Certificados de Posesión" subtitulo="Certificados emitidos sobre parcelas" btnText="NUEVO CERTIFICADO"
     [showAddBtn]="perms.hasPermission('crear_comunero')" [loading]="crud.tableLoading()"
     [data]="crud.resource().data" [meta]="crud.resource().meta"
@@ -9,7 +45,7 @@
             <th class="fw-bold border-0">COMUNERO</th>
             <th class="fw-bold border-0">PARCELA</th>
             <th class="fw-bold border-0">FECHA DE EMISIÓN</th>
-            <th class="text-center border-0" style="width: 120px;">ACCIONES</th>
+            <th class="text-center border-0" style="width: 160px;">ACCIONES</th>
         </tr>
     </thead>
     <tbody tbody>
@@ -24,6 +60,10 @@
                 <td class="text-muted-erp">{{ item.fecha_emision ? (item.fecha_emision | date:'dd/MM/yyyy') : '—' }}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn-action-edit" title="Exportar PDF"
+                                (click)="exportarPdf(item)" [disabled]="exportandoPdf()">
+                            <i class="bi bi-file-earmark-pdf-fill"></i>
+                        </button>
                         @if (perms.hasPermission('editar_comunero')) {
                             <button type="button" class="btn-action-edit" (click)="abrirModal(modalFormulario, item)">
                                 <i class="bi bi-pencil-fill"></i>
@@ -58,6 +98,7 @@
                 <label class="form-label">Comunero <span class="req-star">*</span></label>
                 <ng-select class="ng-select-sm" [items]="comuneros()" bindLabel="apellidos_nombres" bindValue="id_comunero"
                            formControlName="id_comunero" placeholder="Seleccionar..." appendTo="body"
+                           (search)="buscarComunero($event.term)" (open)="buscarComunero('')"
                            notFoundText="Sin resultados" [clearable]="false">
                 </ng-select>
                 <app-form-error [control]="form.get('id_comunero')"></app-form-error>

@@ -45,6 +45,15 @@
     color: var(--erp-primary, #0284c7);
   }
 
+  .sidebar-logo-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+  }
+
   .logo-text {
     font-size: 0.9rem;
     font-weight: 800;

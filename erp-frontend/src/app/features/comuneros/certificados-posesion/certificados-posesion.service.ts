@@ -29,4 +29,12 @@ export class CertificadosPosesionService {
   delete(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
+
+  exportarPdf(idComunero: number, idParcela: number, fechaEmision?: string | null): Observable<Blob> {
+    let params = new HttpParams()
+      .set('id_comunero', idComunero)
+      .set('id_parcela', idParcela);
+    if (fechaEmision) params = params.set('fecha_emision', fechaEmision);
+    return this.http.get(`${this.apiUrl}/pdf`, { params, responseType: 'blob' });
+  }
 }

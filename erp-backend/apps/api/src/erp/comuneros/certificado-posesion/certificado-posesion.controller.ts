@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
+import type { Response } from 'express';
 import { JwtAuthGuard, PermissionsGuard, RequirePermissions } from '@app/auth';
 import { CertificadoPosesionService } from './certificado-posesion.service';
 import { CreateCertificadoPosesionDto, UpdateCertificadoPosesionDto } from './dto/certificado-posesion.dto';
@@ -12,6 +13,12 @@ export class CertificadoPosesionController {
   @Get()
   findAll(@Query() query: any) {
     return this.certificadoPosesionService.findAll(query);
+  }
+
+  @RequirePermissions('COMUNEROS', 'ver_comunero')
+  @Get('pdf')
+  async exportarPdf(@Query() query: any, @Res() res: Response) {
+    await this.certificadoPosesionService.exportarPdf(query, res);
   }
 
   @RequirePermissions('COMUNEROS', 'ver_comunero')

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Certificado de Posesión - Comunidad Campesina Chuyugual</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #fff;
+    margin: 0;
+    padding: 0;
+  }
+  .page {
+    max-width: 850px;
+    margin: 0 auto;
+    background: #fff;
+    position: relative;
+  }
+  .header {
+    background: #d9ecc0;
+    padding: 18px 30px 12px 30px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    border-bottom: 2px solid #b7d99a;
+  }
+  .logo {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #fff;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #7fc142;
+    flex-shrink: 0;
+  }
+  .logo-fallback {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #7fc142, #3f7d1f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 9px;
+    text-align: center;
+    font-weight: bold;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #7fc142;
+    flex-shrink: 0;
+  }
+  .header-text { flex: 1; }
+  .header-text h1 {
+    margin: 0;
+    font-size: 26px;
+    color: #1a1a1a;
+    letter-spacing: 1px;
+  }
+  .header-text .sub1 {
+    color: #333;
+    font-size: 14px;
+    margin-top: 2px;
+  }
+  .header-line2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 30px 10px 30px;
+  }
+  .bienestar {
+    color: #c98a2e;
+    font-style: italic;
+    font-size: 17px;
+    font-weight: bold;
+  }
+  .partida {
+    color: #1f6b1f;
+    font-weight: bold;
+    font-size: 15px;
+  }
+  .anio {
+    text-align: center;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 4px 20px 14px 20px;
+  }
+  .title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-decoration: underline;
+    margin: 20px 0 24px 0;
+    color: #1a1a1a;
+  }
+  .content {
+    padding: 0 45px 20px 45px;
+    font-size: 15px;
+    line-height: 1.9;
+    color: #111;
+    text-align: justify;
+  }
+  .content b { font-weight: bold; }
+  .valor {
+    font-weight: 700;
+    color: #111;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .colindantes-title {
+    font-weight: bold;
+    margin-top: 18px;
+    margin-bottom: 6px;
+  }
+  .colindante-line {
+    margin: 10px 0;
+  }
+  .firma {
+    text-align: right;
+    margin: 50px 45px 50px 0;
+    font-size: 15px;
+  }
+  .footer {
+    background: #d9ecc0;
+    padding: 16px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #b7d99a;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 14px;
+    color: #1a1a1a;
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      {{LOGO_HTML}}
+      <div class="header-text">
+        <h1>COMUNIDAD&nbsp;&nbsp;CAMPESINA&nbsp;&nbsp;CHUYUGUAL</h1>
+        <div class="sub1" style="text-align:right;">Inscrito en Registros Públicos de Huamachuco</div>
+      </div>
+    </div>
+    <div class="header-line2">
+      <div class="bienestar">&ldquo;Bienestar Social y Buen trato&rdquo;</div>
+      <div class="partida">N° Partida: {{PARTIDA}}</div>
+    </div>
+    <div class="anio">&ldquo;Año de la Esperanza y el Fortalecimiento de la Democracia&rdquo;</div>
+
+    <div class="title">CERTIFICADO DE POSESIÓN</div>
+
+    <div class="content">
+      <p>
+        El presidente y secretarios de la <b>JUNTA DIRECTIVA DE LA COMUNIDAD CAMPESINA
+        CHUYUGUAL</b> Distrito de Sanagorán Provincia Sánchez Carrión Departamento de La
+        Libertad en uso de sus facultades que les confiere la ley <b>CERTIFICAN</b> que el comunero
+        calificado. <span class="valor">{{NOMBRE}}</span> identificado
+        con <b>DNI N°:</b> <span class="valor">{{DNI}}</span>, inscrito en el padrón general de comunero calificados de
+        la Comunidad Campesina Chuyugual es posesionario de una parcela denominada
+        <span class="valor">{{PARCELA}}</span> de <span class="valor">{{HECTAREAS}}</span> hectárea (as), ubicado en el caserío de
+        <span class="valor">{{CASERIO}}</span> sector <span class="valor">{{SECTOR}}</span>. Jurisdicción de la
+        comunidad Campesina Chuyugual:
+      </p>
+
+      <div class="colindantes-title">COLINDANTES:</div>
+
+      <div class="colindante-line">Por el este con: <span class="valor">{{COL_ESTE}}</span></div>
+      <div class="colindante-line">Por el oeste con: <span class="valor">{{COL_OESTE}}</span></div>
+      <div class="colindante-line">Por el norte con: <span class="valor">{{COL_NORTE}}</span></div>
+      <div class="colindante-line">Por el sur con: <span class="valor">{{COL_SUR}}</span></div>
+
+      <p>
+        Por lo tanto, se les expide el presente <b>CERTIFICADO DE POSESION</b> amparados en el
+        artículo 89 de la constitución política, Ley Generales de comunidades N°24656 y el
+        estatuto general de la comunidad Para los fines que estime convenientes.
+      </p>
+    </div>
+
+    <div class="firma">
+      Chuyugual, {{DIA}} de {{MES}} del año {{ANIO}}
+    </div>
+
+    <div class="footer">
+      <div>Centro Poblado. Chuyugual- Sanagorán- Sánchez<br>Carrión-La Libertad-Perú</div>
+      <div>Cel: 948396038</div>
+    </div>
+  </div>
+</body>
+</html>

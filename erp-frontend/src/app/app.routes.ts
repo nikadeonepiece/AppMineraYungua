@@ -14,7 +14,7 @@ export const routes: Routes = [
   },
 
   // ==========================================
-  // ZONA PRIVADA — App Minera Yungua (requiere login)
+  // ZONA PRIVADA — Comunidad Campesina Chuyugual (requiere login)
   // ==========================================
   {
     path: '',

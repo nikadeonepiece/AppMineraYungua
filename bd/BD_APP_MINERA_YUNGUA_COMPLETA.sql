@@ -194,6 +194,7 @@ CREATE TABLE IF NOT EXISTS `parcela` (
   `id_comunero` int NOT NULL COMMENT 'Comunero posesionario de la parcela',
   `id_caserio` int NOT NULL COMMENT 'Caserío donde está ubicada la parcela',
   `denominacion` varchar(150) DEFAULT NULL COMMENT 'Nombre o denominación de la parcela',
+  `sector` varchar(150) DEFAULT NULL COMMENT 'Sector donde está ubicada la parcela',
   `hectareas` decimal(10,2) DEFAULT NULL COMMENT 'Superficie de la parcela en hectáreas',
   `colindante_este` text COMMENT 'Descripción del colindante por el este',
   `colindante_oeste` text COMMENT 'Descripción del colindante por el oeste',

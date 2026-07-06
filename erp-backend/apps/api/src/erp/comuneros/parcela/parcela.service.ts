@@ -6,7 +6,7 @@ import { CreateParcelaDto, UpdateParcelaDto } from './dto/parcela.dto';
 
 const SELECT_LISTADO = `
   SELECT
-    p.id_parcela, p.denominacion, p.hectareas,
+    p.id_parcela, p.denominacion, p.sector, p.hectareas,
     p.colindante_este, p.colindante_oeste, p.colindante_norte, p.colindante_sur,
     p.id_comunero, c.apellidos_nombres AS nombre_comunero,
     p.id_caserio, cs.nombre AS nombre_caserio
@@ -31,9 +31,9 @@ export class ParcelaService {
     const params: any[] = [];
     let where = `WHERE p.estado_registro = 'ACTIVO'`;
     if (query.search) {
-      where += ` AND (p.denominacion LIKE ? OR c.apellidos_nombres LIKE ? OR c.dni LIKE ?)`;
+      where += ` AND (p.denominacion LIKE ? OR p.sector LIKE ? OR c.apellidos_nombres LIKE ? OR c.dni LIKE ?)`;
       const term = `%${String(query.search).trim()}%`;
-      params.push(term, term, term);
+      params.push(term, term, term, term);
     }
     if (query.id_comunero) {
       where += ` AND p.id_comunero = ?`;
@@ -85,6 +85,7 @@ export class ParcelaService {
     await this.assertRelacionesActivas(dto.id_comunero, dto.id_caserio);
 
     const denominacion = dto.denominacion?.trim().toUpperCase() || null;
+    const sector = dto.sector?.trim().toUpperCase() || null;
     const hectareas = dto.hectareas ?? null;
     const este = dto.colindante_este?.trim() || null;
     const oeste = dto.colindante_oeste?.trim() || null;
@@ -93,14 +94,14 @@ export class ParcelaService {
 
     const res = await this.dataSource.query(
       `INSERT INTO parcela (
-        id_comunero, id_caserio, denominacion, hectareas,
+        id_comunero, id_caserio, denominacion, sector, hectareas,
         colindante_este, colindante_oeste, colindante_norte, colindante_sur, id_usuario_crea
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [dto.id_comunero, dto.id_caserio, denominacion, hectareas, este, oeste, norte, sur, userId],
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [dto.id_comunero, dto.id_caserio, denominacion, sector, hectareas, este, oeste, norte, sur, userId],
     );
     const id = Number(res.insertId);
     const nuevo = {
-      id_comunero: dto.id_comunero, id_caserio: dto.id_caserio, denominacion, hectareas,
+      id_comunero: dto.id_comunero, id_caserio: dto.id_caserio, denominacion, sector, hectareas,
       colindante_este: este, colindante_oeste: oeste, colindante_norte: norte, colindante_sur: sur,
     };
     await this.auditoriaService.registrar('parcela', id, 'CREAR', userId, null, nuevo);
@@ -115,6 +116,7 @@ export class ParcelaService {
     if (dto.id_comunero || dto.id_caserio) await this.assertRelacionesActivas(idComunero, idCaserio);
 
     const denominacion = dto.denominacion !== undefined ? (dto.denominacion?.trim().toUpperCase() || null) : antiguo.denominacion;
+    const sector = dto.sector !== undefined ? (dto.sector?.trim().toUpperCase() || null) : antiguo.sector;
     const hectareas = dto.hectareas !== undefined ? dto.hectareas : antiguo.hectareas;
     const este = dto.colindante_este !== undefined ? (dto.colindante_este?.trim() || null) : antiguo.colindante_este;
     const oeste = dto.colindante_oeste !== undefined ? (dto.colindante_oeste?.trim() || null) : antiguo.colindante_oeste;
@@ -123,14 +125,14 @@ export class ParcelaService {
 
     const res = await this.dataSource.query(
       `UPDATE parcela SET
-        id_comunero = ?, id_caserio = ?, denominacion = ?, hectareas = ?,
+        id_comunero = ?, id_caserio = ?, denominacion = ?, sector = ?, hectareas = ?,
         colindante_este = ?, colindante_oeste = ?, colindante_norte = ?, colindante_sur = ?, id_usuario_mod = ?
       WHERE id_parcela = ? AND estado_registro = 'ACTIVO'`,
-      [idComunero, idCaserio, denominacion, hectareas, este, oeste, norte, sur, userId, id],
+      [idComunero, idCaserio, denominacion, sector, hectareas, este, oeste, norte, sur, userId, id],
     );
     if (res.affectedRows === 0) throw new NotFoundException('Parcela no encontrada o ya eliminada');
 
-    const nuevo = { id_comunero: idComunero, id_caserio: idCaserio, denominacion, hectareas, colindante_este: este, colindante_oeste: oeste, colindante_norte: norte, colindante_sur: sur };
+    const nuevo = { id_comunero: idComunero, id_caserio: idCaserio, denominacion, sector, hectareas, colindante_este: este, colindante_oeste: oeste, colindante_norte: norte, colindante_sur: sur };
     await this.auditoriaService.registrar('parcela', id, 'ACTUALIZAR', userId, antiguo, nuevo);
     return { id_parcela: id, ...nuevo };
   }

@@ -312,7 +312,7 @@ export class PdfGeneratorService {
   private dibujarCabecera(doc: jsPDF, titulo: string, rango: any, fecha: string) {
     doc.setFontSize(22);
     doc.setTextColor(10, 102, 194);
-    doc.text('APP MINERA YUNGUA', 14, 20);
+    doc.text('COMUNIDAD CAMPESINA CHUYUGUAL', 14, 20);
 
     doc.setFontSize(14);
     doc.setTextColor(60);
@@ -339,7 +339,7 @@ export class PdfGeneratorService {
       doc.setPage(i);
       doc.setFontSize(7);
       doc.setTextColor(180);
-      doc.text('Sistema App Minera Yungua - Información Confidencial', 14, 287);
+      doc.text('Sistema Comunidad Campesina Chuyugual - Información Confidencial', 14, 287);
       doc.text(`Página ${i} de ${pages}`, 190, 285, { align: 'right' });
     }
   }
