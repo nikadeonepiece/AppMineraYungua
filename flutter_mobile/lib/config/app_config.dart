@@ -1,9 +1,9 @@
 /// Base URL del API Nest (incluye sufijo `/api`).
 /// En dispositivo físico usa la IP LAN de tu PC (no localhost).
-/// Emulador Android → máquina host: `http://10.0.2.2:3000/api`
+/// Emulador Android → máquina host: `http://10.0.2.2:3777/api`
 const String kApiBase = String.fromEnvironment(
   'API_BASE',
-  defaultValue: 'http://10.0.2.2:3000/api',
+  defaultValue: 'http://10.0.2.2:3777/api',
 );
 
 const String kDeviceId = String.fromEnvironment(

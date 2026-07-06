@@ -28,6 +28,7 @@ import { ParcelaModule } from './erp/comuneros/parcela/parcela.module';
 import { CertificadoPosesionModule } from './erp/comuneros/certificado-posesion/certificado-posesion.module';
 import { AsambleaModule } from './erp/comuneros/asamblea/asamblea.module';
 import { FotocheckModule } from './erp/comuneros/fotocheck/fotocheck.module';
+import { MobileModule } from './erp/mobile/mobile.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { FotocheckModule } from './erp/comuneros/fotocheck/fotocheck.module';
     CertificadoPosesionModule,
     AsambleaModule,
     FotocheckModule,
+    MobileModule,
   ],
   controllers: [ApiController],
   providers: [ApiService],

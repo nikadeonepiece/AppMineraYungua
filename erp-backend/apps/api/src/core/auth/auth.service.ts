@@ -1,7 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -9,12 +11,54 @@ export class AuthService {
   constructor(
     private readonly usuariosService: UsuariosService,
     private readonly jwtService: JwtService,
+    private readonly config: ConfigService,
   ) {}
 
+  private buildPayload(user: { id_usuario: number; correo: string; id_rol: number }) {
+    return {
+      sub: user.id_usuario,
+      username: user.correo,
+      roleId: user.id_rol,
+    };
+  }
+
+  private signAccessToken(payload: Record<string, unknown>) {
+    return this.jwtService.sign(payload);
+  }
+
+  private signRefreshToken(payload: Record<string, unknown>) {
+    const expiresIn = (this.config.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d') as any;
+    return this.jwtService.sign(payload, { expiresIn });
+  }
+
+  private buildAuthResponse(user: any, esPrimeraSesion: boolean) {
+    const payload = this.buildPayload(user);
+    return {
+      mensaje: 'Login exitoso',
+      access_token: this.signAccessToken(payload),
+      refresh_token: this.signRefreshToken(payload),
+      sessionId: String(user.id_usuario),
+      primera_sesion: esPrimeraSesion,
+      usuario: {
+        id_usuario: user.id_usuario,
+        nombres: user.nombres,
+        apellidos: user.apellidos,
+        correo: user.correo,
+        username: user.correo,
+        id_rol: user.id_rol,
+        nombre_rol: user.rol,
+        rol: user.rol,
+      },
+    };
+  }
+
   async login(loginDto: LoginDto) {
-    const user = await this.usuariosService.findByEmail(loginDto.correo);
-    console.log('>>> correo recibido:', loginDto.correo);
-    console.log('>>> user de BD:', JSON.stringify(user));
+    const identifier = String(loginDto.correo || loginDto.username || '').trim();
+    if (!identifier) {
+      throw new UnauthorizedException('Credenciales incorrectas o usuario inactivo');
+    }
+
+    const user = await this.usuariosService.findByEmail(identifier);
 
     if (!user || user.estado_registro !== 'ACTIVO') {
       throw new UnauthorizedException('Credenciales incorrectas o usuario inactivo');
@@ -26,27 +70,40 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
 
-    const payload = {
-      sub: user.id_usuario,
-      username: user.correo,
-      roleId: user.id_rol
-    };
-
     let esPrimeraSesion = false;
-    try { esPrimeraSesion = await this.usuariosService.leerYMarcarPrimeraSesion(user.id_usuario); } catch (_) {}
+    try {
+      esPrimeraSesion = await this.usuariosService.leerYMarcarPrimeraSesion(user.id_usuario);
+    } catch (_) {}
 
-    return {
-      mensaje: 'Login exitoso',
-      access_token: this.jwtService.sign(payload),
-      primera_sesion: esPrimeraSesion,
-      usuario: {
-        id_usuario: user.id_usuario,
-        nombres: user.nombres,
-        apellidos: user.apellidos,
-        correo: user.correo,
-        id_rol: user.id_rol,
-        nombre_rol: user.rol
+    return this.buildAuthResponse(user, esPrimeraSesion);
+  }
+
+  async refresh(dto: RefreshTokenDto) {
+    try {
+      const payload = this.jwtService.verify(dto.refreshToken);
+      if (String(payload.sub) !== String(dto.sessionId)) {
+        throw new UnauthorizedException('Sesión inválida');
       }
-    };
+      const user = await this.usuariosService.findOne(Number(payload.sub));
+      if (!user?.data || user.data.estado_registro !== 'ACTIVO') {
+        throw new UnauthorizedException('Usuario inactivo');
+      }
+      const normalized = {
+        id_usuario: user.data.id_usuario,
+        correo: user.data.correo,
+        id_rol: user.data.id_rol,
+        nombres: user.data.nombres,
+        apellidos: user.data.apellidos,
+        rol: user.data.nombre_rol || user.data.rol,
+      };
+      return this.buildAuthResponse(normalized, false);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
+      throw new UnauthorizedException('Refresh token inválido o expirado');
+    }
+  }
+
+  async logout() {
+    return { mensaje: 'Sesión cerrada' };
   }
 }

@@ -28,13 +28,15 @@ async function bootstrap() {
     crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
   
-  // ✅ CORS configurado y seguro para producción y tu frontend local
+  const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:4200')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: [
-      'http://localhost:4200'
-    ],
+    origin: corsOrigins.length > 0 ? corsOrigins : true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true 
+    credentials: true,
   });
 
   app.useGlobalPipes(

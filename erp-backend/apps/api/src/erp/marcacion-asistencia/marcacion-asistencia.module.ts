@@ -5,5 +5,6 @@ import { MarcacionAsistenciaController } from './marcacion-asistencia.controller
 @Module({
   controllers: [MarcacionAsistenciaController],
   providers: [MarcacionAsistenciaService],
+  exports: [MarcacionAsistenciaService],
 })
 export class MarcacionAsistenciaModule {}
