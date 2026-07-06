@@ -5,8 +5,14 @@ import { AuditoriaService } from '@app/common';
 import { CreateComuneroDto, UpdateComuneroDto } from './dto/comunero.dto';
 
 const SELECT_COLS = `
-  id_comunero, dni, apellidos_nombres, dni_validado_reniec,
-  consentimiento_biometrico, fecha_consentimiento_biometrico, fecha_registro
+  c.id_comunero, c.dni, c.apellidos_nombres, c.dni_validado_reniec,
+  c.consentimiento_biometrico, c.fecha_consentimiento_biometrico, c.fecha_registro,
+  COALESCE(NULLIF(TRIM(p.foto), ''), NULLIF(TRIM(c.foto), '')) AS foto
+`;
+
+const SELECT_FROM = `
+  FROM comunero c
+  LEFT JOIN personal p ON p.dni = c.dni AND p.estado_registro = 'ACTIVO'
 `;
 
 @Injectable()
@@ -23,14 +29,14 @@ export class ComuneroService {
     const offset = (page - 1) * limit;
 
     const params: any[] = [];
-    let where = `WHERE estado_registro = 'ACTIVO'`;
+    let where = `WHERE c.estado_registro = 'ACTIVO'`;
     if (query.search) {
-      where += ` AND (dni LIKE ? OR apellidos_nombres LIKE ?)`;
+      where += ` AND (c.dni LIKE ? OR c.apellidos_nombres LIKE ?)`;
       const term = `%${String(query.search).trim()}%`;
       params.push(term, term);
     }
 
-    const sql = `SELECT ${SELECT_COLS} FROM comunero ${where} ORDER BY apellidos_nombres ASC LIMIT ? OFFSET ?`;
+    const sql = `SELECT ${SELECT_COLS} ${SELECT_FROM} ${where} ORDER BY c.apellidos_nombres ASC LIMIT ? OFFSET ?`;
 
     if (isExport) {
       return this.dataSource.query(sql, [...params, limit, offset]);
@@ -38,7 +44,7 @@ export class ComuneroService {
 
     const [data, totalRes] = await Promise.all([
       this.dataSource.query(sql, [...params, limit, offset]),
-      this.dataSource.query(`SELECT COUNT(*) as total FROM comunero ${where}`, params),
+      this.dataSource.query(`SELECT COUNT(*) as total FROM comunero c ${where}`, params),
     ]);
 
     return { data, meta: { total: Number(totalRes[0]?.total || 0), page, limit } };
@@ -46,7 +52,7 @@ export class ComuneroService {
 
   async findOne(id: number) {
     const [row] = await this.dataSource.query(
-      `SELECT ${SELECT_COLS} FROM comunero WHERE id_comunero = ? AND estado_registro = 'ACTIVO'`,
+      `SELECT ${SELECT_COLS} ${SELECT_FROM} WHERE c.id_comunero = ? AND c.estado_registro = 'ACTIVO'`,
       [id],
     );
     if (!row) throw new NotFoundException('Comunero no encontrado');
@@ -117,6 +123,7 @@ export class ComuneroService {
       [dni, apellidosNombres, consentimiento, userId],
     );
     const id = Number(res.insertId);
+    await this.syncComuneroFotoDesdePersonal(dni, userId);
     const nuevo = { dni, apellidos_nombres: apellidosNombres, consentimiento_biometrico: !!consentimiento };
     await this.auditoriaService.registrar('comunero', id, 'CREAR', userId, null, nuevo);
     return { id_comunero: id, ...nuevo };
@@ -141,6 +148,7 @@ export class ComuneroService {
 
     const nuevo = { dni, apellidos_nombres: apellidosNombres, consentimiento_biometrico: !!consentimientoNuevo };
     await this.auditoriaService.registrar('comunero', id, 'ACTUALIZAR', userId, antiguo, nuevo);
+    await this.syncComuneroFotoDesdePersonal(dni, userId);
     return { id_comunero: id, ...nuevo };
   }
 
@@ -165,5 +173,18 @@ export class ComuneroService {
 
     await this.auditoriaService.registrar('comunero', id, 'ELIMINAR', userId, antiguo, null);
     return { mensaje: 'Comunero eliminado correctamente' };
+  }
+
+  private async syncComuneroFotoDesdePersonal(dni: string, userId: number) {
+    if (!dni?.trim()) return;
+
+    await this.dataSource.query(
+      `UPDATE comunero c
+       INNER JOIN personal p ON p.dni = c.dni AND p.estado_registro = 'ACTIVO'
+       SET c.foto = p.foto, c.id_usuario_mod = ?
+       WHERE c.dni = ? AND c.estado_registro = 'ACTIVO'
+         AND p.foto IS NOT NULL AND TRIM(p.foto) <> ''`,
+      [userId, dni.trim()],
+    );
   }
 }

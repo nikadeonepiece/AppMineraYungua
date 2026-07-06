@@ -6,8 +6,12 @@ import '../services/offline_pin_store.dart';
 import '../theme/app_theme.dart';
 
 bool sessionIsAdmin(AuthSession session) {
-  final r = session.role?.trim().toLowerCase();
-  return r == 'admin' || r == 'administrador';
+  final r = session.role?.trim().toLowerCase() ?? '';
+  if (r.isEmpty) return false;
+  return r == 'admin' ||
+      r == 'administrador' ||
+      r == 'superadmin' ||
+      r.contains('admin');
 }
 
 /// Configurar o cambiar PIN para acceso sin red (solo administrador, con sesión online).

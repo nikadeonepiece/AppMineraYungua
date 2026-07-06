@@ -5,5 +5,6 @@ export * from './interceptors/response.interceptor';
 export * from './excel.service'; 
 export * from './pdf.service';
 export * from './face-client/face-client.service';
+export * from './upload/upload.service';
 export * from '../auditoria/auditoria.module'; // <--- EXPORTA LA AUDITORÍA
 export * from '../auditoria/auditoria.service'; // <--- EXPORTA EL SERVICIO

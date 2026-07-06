@@ -7,9 +7,19 @@ import { MobileSyncService } from './mobile-sync.service';
 export class MobileSyncController {
   constructor(private readonly syncService: MobileSyncService) {}
 
+  @Get('areas')
+  areas() {
+    return this.syncService.listAreas();
+  }
+
   @Get('empleados')
-  empleados(@Query('updated_after') updatedAfter?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.syncService.syncEmpleados(updatedAfter, Number(page), Number(limit));
+  empleados(
+    @Query('updated_after') updatedAfter?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('id_areas') idAreas?: string,
+  ) {
+    return this.syncService.syncEmpleados(updatedAfter, Number(page), Number(limit), idAreas);
   }
 
   @Get('usuarios')
@@ -18,7 +28,12 @@ export class MobileSyncController {
   }
 
   @Get('biometria')
-  biometria(@Query('updated_after') updatedAfter?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.syncService.syncBiometria(updatedAfter, Number(page), Number(limit));
+  biometria(
+    @Query('updated_after') updatedAfter?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('id_areas') idAreas?: string,
+  ) {
+    return this.syncService.syncBiometria(updatedAfter, Number(page), Number(limit), idAreas);
   }
 }

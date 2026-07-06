@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { Subject } from 'rxjs';
+import { Subject, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 import { useCrud } from 'src/app/core/utils/crud.util';
@@ -17,6 +17,8 @@ import { TrabajadoresService } from './trabajadores.service';
 import { AreasService } from '../areas/areas.service';
 import { CargosService } from '../cargos/cargos.service';
 import { RegimenesService } from '../regimenes/regimenes.service';
+import { environment } from 'src/environments/environment';
+import { LayoutService } from 'src/app/core/services/layout.service';
 
 @Component({
   selector: 'app-trabajadores',
@@ -40,6 +42,7 @@ export class TrabajadoresComponent implements OnInit {
   private cargosService = inject(CargosService);
   private regimenesService = inject(RegimenesService);
   private alert = inject(AlertService);
+  private layout = inject(LayoutService);
   public perms = inject(PermissionsService);
   private destroyRef = inject(DestroyRef);
 
@@ -50,6 +53,14 @@ export class TrabajadoresComponent implements OnInit {
   regimenes = signal<any[]>([]);
   comuneros = signal<any[]>([]);
   buscandoComunero = signal(false);
+  fotoPreview = signal<string | null>(null);
+  firmaPreview = signal<string | null>(null);
+  fotoPendiente = signal(false);
+  firmaPendiente = signal(false);
+  private fotoFile: File | null = null;
+  private firmaFile: File | null = null;
+  private fotoGuardadaUrl: string | null = null;
+  private firmaGuardadaUrl: string | null = null;
   private buscarComunero$ = new Subject<string>();
 
   form: FormGroup = this.fb.group({
@@ -103,6 +114,63 @@ export class TrabajadoresComponent implements OnInit {
 
   onSearch(term: string) { this.crud.searchControl.setValue(term); }
 
+  assetUrl(path: string | null | undefined): string | null {
+    if (!path) return null;
+    const rel = String(path).replace(/^uploads\//, '');
+    return `${environment.uploadsUrl}${rel}`;
+  }
+
+  private resetArchivos() {
+    this.fotoFile = null;
+    this.firmaFile = null;
+    this.fotoPendiente.set(false);
+    this.firmaPendiente.set(false);
+    this.fotoGuardadaUrl = null;
+    this.firmaGuardadaUrl = null;
+    this.fotoPreview.set(null);
+    this.firmaPreview.set(null);
+  }
+
+  onFotoSeleccionada(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.alert.error('La foto debe ser una imagen (JPG, PNG o WEBP).');
+      input.value = '';
+      return;
+    }
+    this.fotoFile = file;
+    this.fotoPendiente.set(true);
+    this.fotoPreview.set(URL.createObjectURL(file));
+  }
+
+  onFirmaSeleccionada(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.alert.error('La firma debe ser una imagen (JPG, PNG o WEBP).');
+      input.value = '';
+      return;
+    }
+    this.firmaFile = file;
+    this.firmaPendiente.set(true);
+    this.firmaPreview.set(URL.createObjectURL(file));
+  }
+
+  quitarFoto() {
+    this.fotoFile = null;
+    this.fotoPendiente.set(false);
+    this.fotoPreview.set(this.fotoGuardadaUrl);
+  }
+
+  quitarFirma() {
+    this.firmaFile = null;
+    this.firmaPendiente.set(false);
+    this.firmaPreview.set(this.firmaGuardadaUrl);
+  }
+
   onBuscarComunero(term: string) { this.buscarComunero$.next(term); }
 
   onComuneroSeleccionado(comunero: any | null) {
@@ -151,6 +219,11 @@ export class TrabajadoresComponent implements OnInit {
             observaciones: data.observaciones,
             consentimiento_biometrico: !!data.consentimiento_biometrico,
           });
+          this.resetArchivos();
+          this.fotoGuardadaUrl = this.assetUrl(data.foto);
+          this.firmaGuardadaUrl = this.assetUrl(data.firma);
+          this.fotoPreview.set(this.fotoGuardadaUrl);
+          this.firmaPreview.set(this.firmaGuardadaUrl);
           this.comuneros.set([]);
           if (data.id_comunero) {
             this.form.get('dni')!.disable();
@@ -170,17 +243,81 @@ export class TrabajadoresComponent implements OnInit {
       this.form.reset({ consentimiento_biometrico: false });
       this.form.get('dni')!.enable();
       this.comuneros.set([]);
+      this.resetArchivos();
       this.crud.openModal(modalTemplate, { centered: true, backdrop: 'static', size: 'lg' });
     }
   }
 
   guardar() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+
     const data = { ...this.form.getRawValue() };
     Object.keys(data).forEach((key) => {
       if (data[key] === '' || data[key] === null) delete data[key];
     });
-    this.crud.save(data);
+
+    const id = this.crud.editingId();
+    const puedeSubirArchivos = this.perms.hasPermission('editar_personal');
+    const tieneArchivos = !!(this.fotoFile || this.firmaFile);
+
+    if (tieneArchivos && !puedeSubirArchivos) {
+      this.alert.error('No tiene permiso para subir foto o firma del trabajador.');
+      return;
+    }
+
+    this.layout.showLoader();
+    this.crud.tableLoading.set(true);
+
+    const req$ = id ? this.service.update(id, data) : this.service.create(data);
+
+    req$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res: any) => {
+        const row = res.data?.data || res.data;
+        const personalId = id || row?.id_personal;
+        if (!personalId) {
+          this.finalizarGuardado();
+          return;
+        }
+        if (!tieneArchivos) {
+          this.finalizarGuardado();
+          return;
+        }
+
+        const uploads = [];
+        if (this.fotoFile) uploads.push(this.service.uploadFoto(personalId, this.fotoFile));
+        if (this.firmaFile) uploads.push(this.service.uploadFirma(personalId, this.firmaFile));
+
+        forkJoin(uploads).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+          next: () => this.finalizarGuardado(),
+          error: (err: any) => {
+            this.layout.hideLoader();
+            this.crud.tableLoading.set(false);
+            const msg = err.error?.mensaje || err.error?.message || 'Datos guardados, pero falló la subida de archivos.';
+            this.alert.error(Array.isArray(msg) ? msg[0] : msg);
+            this.crud.closeModal();
+            this.crud.refresh();
+          },
+        });
+      },
+      error: (err: any) => {
+        this.layout.hideLoader();
+        this.crud.tableLoading.set(false);
+        const msg = err.error?.mensaje || err.error?.message || 'Error al procesar';
+        this.alert.error(Array.isArray(msg) ? msg[0] : msg);
+      },
+    });
+  }
+
+  private finalizarGuardado() {
+    this.layout.hideLoader();
+    this.crud.tableLoading.set(false);
+    this.crud.closeModal();
+    this.alert.success('Trabajador guardado correctamente');
+    if (!this.crud.editingId()) {
+      this.crud.page.set(1);
+      if (this.crud.searchControl.value) this.crud.searchControl.setValue('', { emitEvent: false });
+    }
+    this.crud.refresh();
   }
 
   eliminar(item: any) {

@@ -22,7 +22,7 @@
     width: 210mm;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-family: Arial, 'Segoe UI', Helvetica, sans-serif;
     background: #fff;
   }
 
@@ -44,7 +44,7 @@
     text-align: center;
     font-size: 6px;
     font-weight: 700;
-    color: #1f4d12;
+    color: #2b2b2b;
     letter-spacing: 0.4px;
     text-transform: uppercase;
     line-height: 1.2;
@@ -66,95 +66,133 @@
   .card-empty {
     width: 53mm;
     height: 85mm;
-    border: 1px dashed #d0d0d0;
-    border-radius: 8px;
-    background: #fafafa;
+    border: 1px dashed #c8c8c8;
+    border-radius: 2mm;
+    background: #f7f7f7;
   }
 
+  /* ── Tarjeta 53 × 85 mm ── */
   .card {
     position: relative;
     width: 53mm;
     height: 85mm;
-    border-radius: 8px;
+    border-radius: 2mm;
     overflow: hidden;
+    border: 0.35mm solid #1e1e1e;
     background: #fff;
-    border: 1px solid #b8d4a8;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-top {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    background: #2b2b2b;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-bottom: 0;
+    padding: 1mm 1.2mm 4.2mm;
+    z-index: 1;
   }
 
-  .card-deco {
+  .wm-pattern {
     position: absolute;
+    inset: 0;
+    opacity: 1;
     pointer-events: none;
-    z-index: 0;
-  }
-  .card-deco-tl {
-    top: 0; left: 0;
-    width: 22mm; height: 18mm;
-    background: radial-gradient(ellipse at 0% 0%, #a8d84a 0%, transparent 68%),
-                radial-gradient(ellipse at 30% 10%, #2d6b1e 0%, transparent 55%);
-    opacity: 0.85;
-    border-radius: 8px 0 40% 0;
-  }
-  .card-deco-b {
-    bottom: 0; left: 0; right: 0;
-    height: 14mm;
-    background: linear-gradient(135deg, #2d6b1e 0%, #4a8f2a 40%, #a8d84a 100%);
-    opacity: 0.18;
-    border-radius: 0 0 8px 8px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Ctext x='4' y='22' fill='%23ffffff' opacity='0.07' font-family='Arial' font-size='13' font-weight='700'%3ECC%3C/text%3E%3Cpath d='M34 8 L36 14 L42 14 L37 18 L39 24 L34 20 L29 24 L31 18 L26 14 L32 14 Z' fill='%23ffffff' opacity='0.05'/%3E%3C/svg%3E");
+    background-size: 8.75mm 8.75mm;
   }
 
-  .card-slot {
-    width: 9mm;
-    height: 1.5mm;
-    background: #ccc;
-    border-radius: 1mm;
-    margin: 1.5mm auto 1mm;
+  .card-header {
     position: relative;
-    z-index: 1;
+    z-index: 2;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.6mm;
+    margin-bottom: 0.4mm;
+    min-height: 15mm;
   }
 
-  .card-logo-wrap {
-    position: relative;
-    z-index: 1;
-    margin-bottom: 1mm;
+  .brand {
+    flex: 1;
+    min-width: 0;
+    padding-top: 0.2mm;
   }
-  .card-logo {
-    width: 13mm;
-    height: 13mm;
+  .brand-line1,
+  .brand-line2,
+  .nombres,
+  .apellidos,
+  .cargo,
+  .dni-label,
+  .dni-num,
+  .foto-placeholder {
+    font-size: 3mm;
+    line-height: 3mm;
+    height: 3mm;
+    overflow: hidden;
+  }
+  .brand-line1 {
+    display: block;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.02mm;
+    text-transform: uppercase;
+  }
+  .brand-line2 {
+    display: block;
+    font-weight: 800;
+    color: #b8a04e;
+    letter-spacing: 0.04mm;
+    text-transform: uppercase;
+    margin-top: 0.3mm;
+  }
+
+  .logo-wrap {
+    flex-shrink: 0;
+    width: 15mm;
+    height: 15mm;
+  }
+  .seal-logo {
+    width: 15mm;
+    height: 15mm;
     border-radius: 50%;
     object-fit: cover;
-    border: 1.5px solid #2d6b1e;
+    border: 0.5mm solid #b8a04e;
     background: #fff;
+    display: block;
   }
-  .card-logo-fallback {
-    width: 13mm;
-    height: 13mm;
+  .seal-fallback {
+    width: 15mm;
+    height: 15mm;
     border-radius: 50%;
-    background: #2d6b1e;
-    color: #fff;
-    font-size: 4.5px;
+    border: 0.5mm solid #b8a04e;
+    background: radial-gradient(circle at 50% 35%, #6eb5e8 0%, #4a8f3a 55%, #2d6b1e 100%);
+    color: #1a1a1a;
+    font-size: 2mm;
+    line-height: 2.2mm;
+    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-weight: bold;
-    line-height: 1.1;
-    border: 1.5px solid #1f4d12;
+    text-transform: uppercase;
+    padding: 0.5mm;
   }
 
   .foto-wrap {
     position: relative;
-    z-index: 1;
-    width: 17mm;
-    height: 21mm;
-    border: 2px solid #2d6b1e;
-    border-radius: 3px;
+    z-index: 2;
+    width: 22.5mm;
+    height: 27mm;
+    border-radius: 1.5mm;
     overflow: hidden;
-    margin-bottom: 1mm;
-    background: #f0f4ec;
+    background: #fff;
+    margin-bottom: 0.4mm;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -165,67 +203,161 @@
     object-fit: cover;
   }
   .foto-placeholder {
-    font-size: 4.5px;
     color: #888;
     text-align: center;
-    padding: 2px;
+    padding: 0;
   }
 
-  .nombre {
+  .identity {
     position: relative;
-    z-index: 1;
-    font-size: 6px;
-    font-weight: 800;
-    text-transform: uppercase;
-    color: #1f4d12;
-    line-height: 1.12;
+    z-index: 2;
+    width: 100%;
     text-align: center;
-    padding: 0 1.5mm;
-    max-height: 8mm;
-    overflow: hidden;
-    margin-bottom: 0.8mm;
+    padding: 0 0.3mm 0.2mm;
   }
-
-  .sep {
-    position: relative;
-    z-index: 1;
-    width: 70%;
-    height: 1px;
-    background: #2d6b1e;
-    margin-bottom: 0.8mm;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .sep::after {
-    content: '';
-    width: 3px;
-    height: 3px;
-    background: #2d6b1e;
-    border-radius: 50%;
-    position: absolute;
-  }
-
-  .cargo {
-    position: relative;
-    z-index: 1;
-    font-size: 5.5px;
-    font-weight: 700;
-    color: #2d6b1e;
+  .nombres {
+    font-weight: 800;
+    color: #fff;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
-    margin-bottom: 1mm;
+    letter-spacing: 0.02mm;
+  }
+  .apellidos {
+    font-weight: 800;
+    color: #b8a04e;
+    text-transform: uppercase;
+    letter-spacing: 0.02mm;
+    margin-top: 0.3mm;
+  }
+
+  .wave-divider {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.2mm;
+    height: 5.5mm;
+    z-index: 3;
+    pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 530 55' preserveAspectRatio='none'%3E%3Cpath d='M0,38 C90,12 180,48 265,28 C350,8 440,42 530,22 L530,55 L0,55 Z' fill='%23ffffff'/%3E%3Cpath d='M0,36 C90,10 180,46 265,26 C350,6 440,40 530,20 L530,36 C440,46 350,22 265,34 C180,46 90,24 0,36 Z' fill='%23b8a04e'/%3E%3C/svg%3E") no-repeat bottom center;
+    background-size: 100% 100%;
+  }
+
+  .card-bottom {
+    position: relative;
+    flex: 0 0 29.5mm;
+    height: 29.5mm;
+    background: #fff;
+    z-index: 2;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding-top: 1mm;
+  }
+
+  .cargo-wrap {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 0.4mm;
+  }
+  .cargo {
+    font-weight: 800;
+    color: #b8a04e;
+    text-transform: uppercase;
+    letter-spacing: 0.04mm;
+  }
+
+  .guilloche {
+    position: absolute;
+    inset: 0;
+    opacity: 0.35;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M0,40 Q20,0 40,40 T80,40' fill='none' stroke='%23b0b0b0' stroke-width='0.4'/%3E%3Cpath d='M0,20 Q20,60 40,20 T80,20' fill='none' stroke='%23b0b0b0' stroke-width='0.4'/%3E%3Cpath d='M0,60 Q20,20 40,60 T80,60' fill='none' stroke='%23b0b0b0' stroke-width='0.4'/%3E%3Ccircle cx='40' cy='40' r='18' fill='none' stroke='%23c0c0c0' stroke-width='0.3'/%3E%3C/svg%3E");
+    background-size: 12.5mm 12.5mm;
+  }
+
+  .footer {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 0 0.8mm 0.6mm;
+    gap: 0.5mm;
+  }
+
+  .footer-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0.6mm;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: calc(100% - 22.5mm);
+    padding-top: 0.5mm;
+  }
+
+  .icon-chakana {
+    width: 8mm;
+    height: 8mm;
+    flex-shrink: 0;
+  }
+  .icon-chakana svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .dni-block {
+    display: table;
+    border-collapse: collapse;
+    max-width: 100%;
+  }
+  .icon-id {
+    display: table-cell;
+    vertical-align: top;
+    width: 6.5mm;
+    height: auto;
+    padding-right: 0.7mm;
+    padding-top: 0.3mm;
+  }
+  .icon-id svg {
+    width: 6.5mm;
+    height: 5mm;
+    display: block;
+  }
+
+  .dni-lines {
+    display: table-cell;
+    vertical-align: top;
+  }
+  .dni-label {
+    display: block;
+    font-weight: 800;
+    color: #b8a04e;
+    text-transform: uppercase;
+  }
+  .dni-num {
+    display: block;
+    font-weight: 800;
+    color: #2b2b2b;
+    letter-spacing: 0.2px;
+    margin-top: 0.2mm;
   }
 
   .qr-wrap {
-    position: relative;
-    z-index: 1;
-    width: 15mm;
-    height: 15mm;
-    border: 1px solid #333;
-    padding: 0.4mm;
+    flex-shrink: 0;
+    align-self: center;
+    width: 22mm;
+    height: 22mm;
+    border: 0.5mm solid #b8a04e;
+    border-radius: 1.2mm;
+    padding: 0.35mm;
     background: #fff;
-    margin-bottom: 0.8mm;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -234,31 +366,7 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-  }
-
-  .dni {
-    position: relative;
-    z-index: 1;
-    font-size: 5.5px;
-    font-weight: 600;
-    color: #222;
-    margin-bottom: 1mm;
-  }
-
-  .codigo-bar {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    margin-top: auto;
-    background: #2d6b1e;
-    color: #fff;
-    font-size: 5px;
-    font-weight: 800;
-    text-align: center;
-    padding: 1.2mm 0.8mm;
-    letter-spacing: 0.2px;
-    text-transform: uppercase;
-    border-radius: 0 0 7px 7px;
+    display: block;
   }
 </style>
 </head>

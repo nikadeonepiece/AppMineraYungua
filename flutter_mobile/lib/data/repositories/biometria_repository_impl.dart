@@ -16,13 +16,20 @@ class BiometriaRepositoryImpl implements BiometriaRepository {
   final BiometriaRemoteDatasource _remote;
 
   @override
-  Future<SyncPullResult> syncIncremental(DateTime? updatedAfter) async {
+  Future<SyncPullResult> syncIncremental(
+    DateTime? updatedAfter, {
+    List<int>? areaIds,
+  }) async {
     var page = 1;
     var totalFetched = 0;
     DateTime? nextCursor = updatedAfter;
 
     while (true) {
-      final response = await _remote.getUpdatedAfter(updatedAfter, page: page);
+      final response = await _remote.getUpdatedAfter(
+        areaIds != null && areaIds.isNotEmpty ? null : updatedAfter,
+        page: page,
+        areaIds: areaIds,
+      );
       final list = response.data.map(_toLocal).toList();
       if (list.isNotEmpty) {
         await _local.upsertAll(list);

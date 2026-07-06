@@ -36,4 +36,16 @@ export class TrabajadoresService {
   delete(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
+
+  uploadFoto(id: number, file: File): Observable<any> {
+    const form = new FormData();
+    form.append('foto', file);
+    return this.http.post(`${this.apiUrl}/${id}/foto`, form);
+  }
+
+  uploadFirma(id: number, file: File): Observable<any> {
+    const form = new FormData();
+    form.append('firma', file);
+    return this.http.post(`${this.apiUrl}/${id}/firma`, form);
+  }
 }

@@ -87,10 +87,15 @@ class SyncManager {
     );
   }
 
-  Future<void> syncEmpleados() async {
+  Future<void> syncEmpleados({List<int>? areaIds}) async {
     await _syncEntity(
-      entity: 'empleados',
-      action: (lastSync) => _empleadosRepository.syncIncremental(lastSync),
+      entity: areaIds != null && areaIds.isNotEmpty
+          ? 'empleados_areas_${areaIds.join('_')}'
+          : 'empleados',
+      action: (lastSync) => _empleadosRepository.syncIncremental(
+        areaIds != null && areaIds.isNotEmpty ? null : lastSync,
+        areaIds: areaIds,
+      ),
     );
   }
 
@@ -101,12 +106,32 @@ class SyncManager {
     );
   }
 
-  Future<void> syncBiometria() async {
+  Future<void> syncBiometria({List<int>? areaIds}) async {
     await _syncEntity(
-      entity: 'biometria',
-      action: (lastSync) => _biometriaRepository.syncIncremental(lastSync),
+      entity: areaIds != null && areaIds.isNotEmpty
+          ? 'biometria_areas_${areaIds.join('_')}'
+          : 'biometria',
+      action: (lastSync) => _biometriaRepository.syncIncremental(
+        areaIds != null && areaIds.isNotEmpty ? null : lastSync,
+        areaIds: areaIds,
+      ),
     );
     EmbeddingCacheService.shared.invalidate();
+  }
+
+  /// Descarga personal y biometría de las áreas elegidas (marcación offline).
+  Future<void> syncForAreas(List<int> areaIds) async {
+    if (areaIds.isEmpty) {
+      throw ArgumentError('Seleccione al menos un área');
+    }
+    final watch = Stopwatch()..start();
+    AppLogger.instance.i('syncForAreas iniciado: $areaIds');
+    await _ensureTenantDevice();
+    await syncEmpleados(areaIds: areaIds);
+    await syncBiometria(areaIds: areaIds);
+    await uploadMarcaciones();
+    watch.stop();
+    AppLogger.instance.i('syncForAreas finalizado en ${watch.elapsedMilliseconds} ms');
   }
 
   Future<MarcacionesUploadResult> uploadMarcaciones(

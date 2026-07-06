@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../config/app_config.dart';
 import '../core/bootstrap/offline_bootstrap.dart';
 import '../models/auth_session.dart';
 import '../services/api_client.dart';
@@ -80,8 +81,21 @@ class _LoginScreenState extends State<LoginScreen> {
       widget.onLoggedIn(session);
     } on ApiException catch (e) {
       setState(() => _error = e.message);
-    } on SocketException {
-      setState(() => _error = 'Sin conexion al servidor. Verifica IP, red y backend.');
+    } on SocketException catch (e) {
+      final msg = e.message.toLowerCase();
+      final apIsolation = msg.contains('no route to host') ||
+          msg.contains('host unreachable') ||
+          msg.contains('network is unreachable');
+      final extra = apIsolation
+          ? '\n\nEl router Wi-Fi parece tener aislamiento entre dispositivos '
+              '(no se ven entre sí aunque estén en 192.168.0.x).\n'
+              '• Con USB: adb reverse tcp:3777 tcp:3777 y API_BASE=http://127.0.0.1:3777/api\n'
+              '• O desactiva "aislamiento AP / client isolation" en el router.'
+          : '';
+      setState(() => _error =
+          'Sin conexion al servidor. Verifica IP, red y backend.\n'
+          'API: $kApiBase\n'
+          'Detalle: ${e.message}$extra');
     } on TimeoutException {
       setState(() => _error = 'Tiempo de espera agotado al conectar con el servidor.');
     } catch (_) {

@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { AuditoriaService } from '@app/common';
+import { AuditoriaService, UploadService } from '@app/common';
 import { CreatePersonalDto, UpdatePersonalDto } from './dto/personal.dto';
 
 const SELECT_LISTADO = `
@@ -25,6 +25,7 @@ export class PersonalService {
   constructor(
     @InjectDataSource('APP_MINERA_YUNGUA_CONN') private dataSource: DataSource,
     private readonly auditoriaService: AuditoriaService,
+    private readonly uploadService: UploadService,
   ) {}
 
   async findAll(query: any) {
@@ -223,6 +224,9 @@ export class PersonalService {
     if (res.affectedRows === 0) throw new NotFoundException('Trabajador no encontrado o ya eliminado');
 
     await this.auditoriaService.registrar('personal', id, 'ACTUALIZAR', userId, antiguo, dto);
+    if (antiguo.foto) {
+      await this.syncComuneroFotoPorDni(antiguo.dni, antiguo.foto, userId);
+    }
     return this.findOne(id);
   }
 
@@ -237,5 +241,47 @@ export class PersonalService {
 
     await this.auditoriaService.registrar('personal', id, 'ELIMINAR', userId, antiguo, null);
     return { mensaje: 'Trabajador eliminado correctamente' };
+  }
+
+  async uploadFoto(id: number, file: Express.Multer.File, userId: number) {
+    const antiguo = await this.findOne(id);
+    const ruta = this.uploadService.saveImage('personal/fotos', file, `p${id}`);
+    this.uploadService.deleteIfExists(antiguo.foto);
+
+    const res = await this.dataSource.query(
+      `UPDATE personal SET foto = ?, id_usuario_mod = ? WHERE id_personal = ? AND estado_registro = 'ACTIVO'`,
+      [ruta, userId, id],
+    );
+    if (res.affectedRows === 0) throw new NotFoundException('Trabajador no encontrado o ya eliminado');
+
+    await this.auditoriaService.registrar('personal', id, 'ACTUALIZAR', userId, { foto: antiguo.foto }, { foto: ruta });
+    await this.syncComuneroFotoPorDni(antiguo.dni, ruta, userId);
+    return this.findOne(id);
+  }
+
+  async uploadFirma(id: number, file: Express.Multer.File, userId: number) {
+    const antiguo = await this.findOne(id);
+    const ruta = this.uploadService.saveImage('personal/firmas', file, `p${id}`);
+    this.uploadService.deleteIfExists(antiguo.firma);
+
+    const res = await this.dataSource.query(
+      `UPDATE personal SET firma = ?, id_usuario_mod = ? WHERE id_personal = ? AND estado_registro = 'ACTIVO'`,
+      [ruta, userId, id],
+    );
+    if (res.affectedRows === 0) throw new NotFoundException('Trabajador no encontrado o ya eliminado');
+
+    await this.auditoriaService.registrar('personal', id, 'ACTUALIZAR', userId, { firma: antiguo.firma }, { firma: ruta });
+    return this.findOne(id);
+  }
+
+  private async syncComuneroFotoPorDni(dni: string | null | undefined, foto: string | null, userId: number) {
+    if (!dni?.trim() || !foto?.trim()) return;
+
+    await this.dataSource.query(
+      `UPDATE comunero
+       SET foto = ?, id_usuario_mod = ?
+       WHERE dni = ? AND estado_registro = 'ACTIVO'`,
+      [foto.trim(), userId, dni.trim()],
+    );
   }
 }

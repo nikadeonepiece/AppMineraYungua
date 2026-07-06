@@ -1,7 +1,28 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { JwtAuthGuard, PermissionsGuard, RequirePermissions } from '@app/auth';
 import { PersonalService } from './personal.service';
 import { CreatePersonalDto, UpdatePersonalDto } from './dto/personal.dto';
+
+const imageUpload = {
+  storage: memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+};
 
 @Controller('personal')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -26,6 +47,28 @@ export class PersonalController {
       idPersonalActual ? Number(idPersonalActual) : undefined,
       idComuneroActual ? Number(idComuneroActual) : undefined,
     );
+  }
+
+  @RequirePermissions('PERSONAL', 'editar_personal')
+  @Post(':id/foto')
+  @UseInterceptors(FileInterceptor('foto', imageUpload))
+  uploadFoto(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    return this.personalService.uploadFoto(id, file, req.user.userId);
+  }
+
+  @RequirePermissions('PERSONAL', 'editar_personal')
+  @Post(':id/firma')
+  @UseInterceptors(FileInterceptor('firma', imageUpload))
+  uploadFirma(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    return this.personalService.uploadFirma(id, file, req.user.userId);
   }
 
   @RequirePermissions('PERSONAL', 'ver_personal')

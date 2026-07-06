@@ -8,15 +8,19 @@ class BiometriaRemoteDatasource {
   Future<SyncPageResult> getUpdatedAfter(
     DateTime? updatedAfter, {
     required int page,
+    List<int>? areaIds,
   }) async {
-    final cursor =
-        updatedAfter ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+    final query = <String, dynamic>{'page': page};
+    if (areaIds != null && areaIds.isNotEmpty) {
+      query['id_areas'] = areaIds.join(',');
+    } else {
+      final cursor =
+          updatedAfter ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+      query['updated_after'] = cursor.toIso8601String();
+    }
     final response = await _client.getPagedList(
       '/v1/sync/biometria',
-      queryParameters: {
-        'updated_after': cursor.toIso8601String(),
-        'page': page,
-      },
+      queryParameters: query,
     );
     return SyncPageResult(
       data: response.data,

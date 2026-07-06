@@ -181,6 +181,54 @@
                 </div>
             </div>
 
+            <div class="col-md-6">
+                <label class="form-label">Foto del trabajador</label>
+                <div class="d-flex align-items-start gap-3">
+                    <div class="archivo-preview border rounded bg-light d-flex align-items-center justify-content-center overflow-hidden"
+                         style="width: 96px; height: 120px;">
+                        @if (fotoPreview()) {
+                            <img [src]="fotoPreview()" alt="Foto" class="img-fluid h-100 w-100" style="object-fit: cover;">
+                        } @else {
+                            <span class="text-muted-erp text-xs-erp text-center px-2">Sin foto</span>
+                        }
+                    </div>
+                    <div class="flex-grow-1">
+                        <input type="file" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp"
+                               (change)="onFotoSeleccionada($event)" [disabled]="!perms.hasPermission('editar_personal')">
+                        <div class="text-muted-erp text-xs-erp mt-1">JPG, PNG o WEBP. Máx. 5 MB.</div>
+                        @if (fotoPendiente() && perms.hasPermission('editar_personal')) {
+                            <button type="button" class="btn btn-link btn-sm text-danger p-0 mt-1" (click)="quitarFoto()">
+                                Quitar selección
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Firma del trabajador</label>
+                <div class="d-flex align-items-start gap-3">
+                    <div class="archivo-preview border rounded bg-light d-flex align-items-center justify-content-center overflow-hidden"
+                         style="width: 120px; height: 72px;">
+                        @if (firmaPreview()) {
+                            <img [src]="firmaPreview()" alt="Firma" class="img-fluid h-100 w-100" style="object-fit: contain;">
+                        } @else {
+                            <span class="text-muted-erp text-xs-erp text-center px-2">Sin firma</span>
+                        }
+                    </div>
+                    <div class="flex-grow-1">
+                        <input type="file" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp"
+                               (change)="onFirmaSeleccionada($event)" [disabled]="!perms.hasPermission('editar_personal')">
+                        <div class="text-muted-erp text-xs-erp mt-1">JPG, PNG o WEBP. Máx. 5 MB.</div>
+                        @if (firmaPendiente() && perms.hasPermission('editar_personal')) {
+                            <button type="button" class="btn btn-link btn-sm text-danger p-0 mt-1" (click)="quitarFirma()">
+                                Quitar selección
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
         </form>
     </div>
 

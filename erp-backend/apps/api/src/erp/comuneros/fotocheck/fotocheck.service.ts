@@ -9,17 +9,18 @@ import { PdfService } from '@app/common';
 
 const SELECT_COMUNERO_CASERIO = `
   SELECT
-    c.id_comunero, c.apellidos_nombres, c.dni, c.foto,
+    c.id_comunero, c.apellidos_nombres, c.dni,
+    COALESCE(NULLIF(TRIM(p.foto), ''), NULLIF(TRIM(c.foto), '')) AS foto,
     cc.numero_padron, cs.nombre AS nombre_caserio, cs.id_caserio
   FROM comunero_caserio cc
   JOIN comunero c ON c.id_comunero = cc.id_comunero AND c.estado_registro = 'ACTIVO'
   JOIN caserio cs ON cs.id_caserio = cc.id_caserio AND cs.estado_registro = 'ACTIVO'
+  LEFT JOIN personal p ON p.dni = c.dni AND p.estado_registro = 'ACTIVO'
 `;
 
 @Injectable()
 export class FotocheckService {
   private logoHtmlCache: string | null = null;
-  private templateCache: string | null = null;
 
   constructor(
     @InjectDataSource('APP_MINERA_YUNGUA_CONN') private dataSource: DataSource,
@@ -115,13 +116,11 @@ export class FotocheckService {
   }
 
   private getTemplate(): string {
-    if (this.templateCache) return this.templateCache;
     const templatePath = join(process.cwd(), 'templates', 'fotocheck_hoja.html');
     if (!existsSync(templatePath)) {
       throw new NotFoundException('Plantilla de fotocheck no encontrada en el servidor');
     }
-    this.templateCache = readFileSync(templatePath, 'utf8');
-    return this.templateCache;
+    return readFileSync(templatePath, 'utf8');
   }
 
   private async buildHojasHtml(
@@ -164,38 +163,114 @@ export class FotocheckService {
   }
 
   private async buildCardHtml(com: any, logoHtml: string): Promise<string> {
-    const nombre = this.escapeHtml(com.apellidos_nombres || '—');
+    const { apellidos, nombres } = this.splitNombre(com.apellidos_nombres || '—');
+    const apellidosHtml = this.escapeHtml(apellidos);
+    const nombresHtml = this.escapeHtml(nombres);
     const dni = this.escapeHtml(com.dni || '—');
-    const codigo = this.buildCodigo(com);
-    const codigoHtml = this.escapeHtml(codigo);
+    const dniQr = this.normalizeDni(com.dni);
     const fotoHtml = this.buildFotoHtml(com.foto);
-    const qrDataUrl = await QRCode.toDataURL(codigo, {
-      width: 160,
-      margin: 0,
-      errorCorrectionLevel: 'M',
+    const qrDataUrl = await QRCode.toDataURL(dniQr, {
+      width: 400,
+      margin: 1,
+      errorCorrectionLevel: 'H',
     });
 
     return `
       <div class="card">
-        <div class="card-deco card-deco-tl"></div>
-        <div class="card-deco card-deco-b"></div>
-        <div class="card-slot"></div>
-        <div class="card-logo-wrap">${logoHtml}</div>
-        <div class="foto-wrap">${fotoHtml}</div>
-        <div class="nombre">${nombre}</div>
-        <div class="sep"></div>
-        <div class="cargo">Miembro Comunal</div>
-        <div class="qr-wrap"><img class="qr-img" src="${qrDataUrl}" alt="QR" /></div>
-        <div class="dni">DNI: ${dni}</div>
-        <div class="codigo-bar">CÓDIGO: ${codigoHtml}</div>
+        <div class="card-top">
+          <div class="wm-pattern"></div>
+          <header class="card-header">
+            <div class="brand">
+              <span class="brand-line1">Comunidad Campesina</span>
+              <span class="brand-line2">Chuyugual</span>
+            </div>
+            <div class="logo-wrap">${logoHtml}</div>
+          </header>
+          <div class="foto-wrap">${fotoHtml}</div>
+          <div class="identity">
+            ${nombresHtml ? `<div class="nombres">${nombresHtml}</div>` : ''}
+            ${apellidosHtml ? `<div class="apellidos">${apellidosHtml}</div>` : ''}
+          </div>
+          <div class="wave-divider"></div>
+        </div>
+        <div class="card-bottom">
+          <div class="guilloche"></div>
+          <div class="cargo-wrap">
+            <div class="cargo">Miembro Comunal</div>
+          </div>
+          <div class="footer">
+            <div class="footer-left">
+              <div class="icon-chakana">${this.buildChakanaSvg(com.id_comunero)}</div>
+              <div class="dni-block">
+                <div class="icon-id">${this.buildIdCardSvg()}</div>
+                <div class="dni-lines">
+                  <div class="dni-label">DNI:</div>
+                  <div class="dni-num">${dni}</div>
+                </div>
+              </div>
+            </div>
+            <div class="qr-wrap"><img class="qr-img" src="${qrDataUrl}" alt="QR" /></div>
+          </div>
+        </div>
       </div>
     `;
   }
 
-  private buildCodigo(com: any): string {
-    const year = new Date().getFullYear();
-    const num = com.numero_padron ?? com.id_comunero;
-    return `CCCH-${year}-${String(num).padStart(5, '0')}`;
+  private splitNombre(full: string): { apellidos: string; nombres: string } {
+    const parts = String(full || '—')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (parts.length === 0) return { apellidos: '—', nombres: '' };
+    if (parts.length === 1) return { apellidos: '', nombres: parts[0] };
+    if (parts.length === 2) return { apellidos: parts[0], nombres: parts[1] };
+    if (parts.length === 3) {
+      return { apellidos: `${parts[0]} ${parts[1]}`, nombres: parts[2] };
+    }
+
+    return {
+      apellidos: parts.slice(0, -2).join(' '),
+      nombres: parts.slice(-2).join(' '),
+    };
+  }
+
+  private buildChakanaSvg(id: number | string = '0'): string {
+    const gid = `chk${id}`;
+    return `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="${gid}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#3d7ec8"/>
+          <stop offset="100%" stop-color="#b8a04e"/>
+        </linearGradient>
+      </defs>
+      <rect x="20" y="4" width="8" height="12" rx="1" fill="url(#${gid})"/>
+      <rect x="20" y="32" width="8" height="12" rx="1" fill="url(#${gid})"/>
+      <rect x="4" y="20" width="12" height="8" rx="1" fill="url(#${gid})"/>
+      <rect x="32" y="20" width="12" height="8" rx="1" fill="url(#${gid})"/>
+      <rect x="14" y="14" width="8" height="8" rx="1" fill="url(#${gid})"/>
+      <rect x="26" y="14" width="8" height="8" rx="1" fill="url(#${gid})"/>
+      <rect x="14" y="26" width="8" height="8" rx="1" fill="url(#${gid})"/>
+      <rect x="26" y="26" width="8" height="8" rx="1" fill="url(#${gid})"/>
+      <circle cx="24" cy="24" r="4.5" fill="#fff"/>
+    </svg>`;
+  }
+
+  private buildIdCardSvg(): string {
+    return `<svg viewBox="0 0 40 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="1" y="3" width="38" height="22" rx="2" fill="none" stroke="#2b2b2b" stroke-width="2"/>
+      <circle cx="12" cy="13" r="4" fill="#2b2b2b"/>
+      <path d="M6 22 C6 18 8.5 16 12 16 C15.5 16 18 18 18 22" fill="#2b2b2b"/>
+      <rect x="22" y="10" width="14" height="2" rx="1" fill="#b8a04e"/>
+      <rect x="22" y="15" width="10" height="2" rx="1" fill="#c8c8c8"/>
+    </svg>`;
+  }
+
+  private normalizeDni(dni: string | null | undefined): string {
+    const digits = String(dni ?? '').replace(/\D/g, '');
+    if (!digits) return '00000000';
+    if (digits.length > 8) return digits.slice(0, 8);
+    return digits.padStart(8, '0');
   }
 
   private buildLogoHtml(): string {
@@ -204,11 +279,12 @@ export class FotocheckService {
     const logoPath = join(process.cwd(), 'templates', 'assets', 'logo.png');
     if (existsSync(logoPath)) {
       const base64 = readFileSync(logoPath).toString('base64');
-      this.logoHtmlCache = `<img class="card-logo" src="data:image/png;base64,${base64}" alt="Logo" />`;
+      this.logoHtmlCache = `<img class="seal-logo" src="data:image/png;base64,${base64}" alt="Logo" />`;
       return this.logoHtmlCache;
     }
 
-    this.logoHtmlCache = '<div class="card-logo-fallback">COMUNIDAD<br>CAMPESINA<br>CHUYUGUAL</div>';
+    this.logoHtmlCache =
+      '<div class="seal-fallback">Comunidad<br>Campesina<br>Chuyugual</div>';
     return this.logoHtmlCache;
   }
 

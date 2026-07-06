@@ -22,6 +22,7 @@ class OfflineBootstrap {
   OfflineBootstrap._();
 
   static final DioClient _dio = DioClient();
+  static DioClient get dioClient => _dio;
   static final EmpleadosRemoteDatasource empleadosRemote = EmpleadosRemoteDatasource(_dio);
   static final TenantsRemoteDatasource tenantsRemote = TenantsRemoteDatasource(_dio);
   static final EmpleadoLocalDatasource _empleadoLocal = EmpleadoLocalDatasource();

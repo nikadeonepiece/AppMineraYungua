@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/bootstrap/offline_bootstrap.dart';
-import '../core/utils/app_logger.dart';
 import '../models/auth_session.dart';
 import '../theme/app_theme.dart';
 import '../widgets/connectivity_status_badge.dart';
@@ -9,6 +7,7 @@ import 'attendance_modes_screen.dart';
 import 'enroll_biometric_screen.dart';
 import 'offline_pin_setup_screen.dart';
 import 'recent_marks_screen.dart';
+import 'sync_areas_screen.dart';
 
 class HomeMenuScreen extends StatelessWidget {
   const HomeMenuScreen({
@@ -103,11 +102,15 @@ class HomeMenuScreen extends StatelessWidget {
             icon: Icons.sync_rounded,
             title: 'Sincronizar con el servidor',
             subtitle:
-                'Descarga empleados, usuarios y biometría; sube marcaciones pendientes. Use con buena conexión.',
+                'Elija área(s), descargue personal y biometría; sube marcaciones pendientes.',
             enabled: !session.isOffline,
             disabledMessage:
                 'Inicie sesión con usuario y contraseña cuando haya red para sincronizar.',
-            onTap: () => _syncWithServer(context),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<bool>(
+                builder: (_) => SyncAreasScreen(session: session),
+              ),
+            ),
           ),
           if (sessionIsAdmin(session) && !session.isOffline)
             _MenuTile(
@@ -168,52 +171,6 @@ class HomeMenuScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  static Future<void> _syncWithServer(BuildContext context) async {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          content: Row(
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Text(
-                  'Sincronizando empleados, usuarios, biometría y cola de marcaciones…',
-                  style: TextStyle(color: Colors.grey.shade800, fontSize: 14),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    try {
-      await OfflineBootstrap.syncManager.syncAll();
-      if (!context.mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sincronización completada.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (e, st) {
-      AppLogger.instance.e('Sincronización manual fallida', error: e, stackTrace: st);
-      if (!context.mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No se pudo sincronizar: $e'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: const Color(0xFFB91C1C),
-        ),
-      );
-    }
   }
 }
 

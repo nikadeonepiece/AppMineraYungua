@@ -26,12 +26,14 @@ class AuthService {
     String? rol;
     if (usuario is Map<String, dynamic>) {
       uname = usuario['username'] as String?;
-      rol = usuario['rol'] as String?;
+      rol = usuario['rol'] as String? ?? usuario['nombre_rol'] as String?;
     }
     await _store.save(
       accessToken: access,
       refreshToken: refresh,
       sessionId: sessionId,
+      username: uname,
+      role: rol,
     );
     return AuthSession(
       accessToken: access,
@@ -48,10 +50,14 @@ class AuthService {
     final refresh = await _store.readRefresh();
     final sessionId = await _store.readSessionId();
     if (access == null || refresh == null || sessionId == null) return null;
+    final username = await _store.readUsername();
+    final role = await _store.readRole();
     return AuthSession(
       accessToken: access,
       refreshToken: refresh,
       sessionId: sessionId,
+      username: username,
+      role: role,
       isOffline: false,
     );
   }
@@ -78,6 +84,8 @@ class AuthService {
       accessToken: access,
       refreshToken: refresh,
       sessionId: sessionId,
+      username: current.username,
+      role: current.role,
     );
     return AuthSession(
       accessToken: access,
