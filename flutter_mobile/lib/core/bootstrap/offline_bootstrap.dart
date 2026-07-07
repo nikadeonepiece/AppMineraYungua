@@ -73,6 +73,9 @@ class OfflineBootstrap {
   static Future<List<MarcacionLocal>> pendingMarcacionesList() =>
       _marcacionLocal.getPending(includeInBackoff: true);
 
+  static Future<List<MarcacionLocal>> allMarcacionesList() =>
+      _marcacionLocal.getAll();
+
   static Future<void> runLocalSecurityMigrations() async {
     await _biometriaLocal.migrateLegacyEmbeddings();
   }

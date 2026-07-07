@@ -171,6 +171,26 @@ class _RecentMarksScreenState extends State<RecentMarksScreen> {
     }
   }
 
+  Map<String, dynamic> _localMarcacionToItem(
+    MarcacionLocal m,
+    Map<int, String> employeeByHash,
+  ) {
+    final hash = m.empleadoId;
+    final name = employeeByHash[hash] ?? 'Empleado #$hash';
+    return {
+      'timestamp': m.fechaHora.toUtc().toIso8601String(),
+      'tipoEvento': m.tipo,
+      'metodo': m.metodo,
+      'empleadoDisplay': name,
+      'origen': 'local',
+      'syncStatus': m.syncStatus,
+      'localUuid': m.uuid,
+      'lastUploadError':
+          m.lastUploadError.trim().isEmpty ? null : m.lastUploadError.trim(),
+      'backoffUntil': m.backoffUntil?.toIso8601String(),
+    };
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -185,23 +205,10 @@ class _RecentMarksScreenState extends State<RecentMarksScreen> {
           for (final e in empleados)
             e.remoteId: e.nombreCompleto.isEmpty ? e.dni : e.nombreCompleto,
         };
-        final localPending = await OfflineBootstrap.pendingMarcacionesList();
-        final localItems = <Map<String, dynamic>>[];
-        for (final m in localPending) {
-          final id = m.empleadoId;
-          final name = employeeByRemoteId[id] ?? 'Empleado #$id';
-          localItems.add({
-            'timestamp': m.fechaHora.toUtc().toIso8601String(),
-            'tipoEvento': m.tipo,
-            'metodo': m.metodo,
-            'empleadoDisplay': name,
-            'origen': 'local',
-            'syncStatus': m.syncStatus,
-            'localUuid': m.uuid,
-            'lastUploadError': m.lastUploadError.trim().isEmpty ? null : m.lastUploadError.trim(),
-            'backoffUntil': m.backoffUntil?.toIso8601String(),
-          });
-        }
+        final localAll = await OfflineBootstrap.allMarcacionesList();
+        final localItems = localAll
+            .map((m) => _localMarcacionToItem(m, employeeByRemoteId))
+            .toList();
         localItems.sort(
           (a, b) => (b['timestamp']?.toString() ?? '')
               .compareTo(a['timestamp']?.toString() ?? ''),
@@ -240,30 +247,20 @@ class _RecentMarksScreenState extends State<RecentMarksScreen> {
       );
       final serverItems = rows.take(50).map((row) {
         final id = row['empleadoId']?.toString().trim() ?? '';
+        final serverName = row['empleadoDisplay']?.toString().trim() ?? '';
         final fallback = id.isEmpty ? '-' : id;
         return {
           ...row,
-          'empleadoDisplay': employeeById[id] ?? fallback,
+          'empleadoDisplay': serverName.isNotEmpty
+              ? serverName
+              : (employeeById[id] ?? fallback),
           'origen': 'servidor',
         };
       }).toList();
 
-      final localItems = <Map<String, dynamic>>[];
-      for (final m in localPending) {
-        final hash = m.empleadoId;
-        final name = employeeByHash[hash] ?? 'Empleado #$hash';
-        localItems.add({
-          'timestamp': m.fechaHora.toUtc().toIso8601String(),
-          'tipoEvento': m.tipo,
-          'metodo': 'facial',
-          'empleadoDisplay': name,
-          'origen': 'local',
-          'syncStatus': m.syncStatus,
-          'localUuid': m.uuid,
-          'lastUploadError': m.lastUploadError.trim().isEmpty ? null : m.lastUploadError.trim(),
-          'backoffUntil': m.backoffUntil?.toIso8601String(),
-        });
-      }
+      final localItems = localPending
+          .map((m) => _localMarcacionToItem(m, employeeByHash))
+          .toList();
       localItems.sort(
         (a, b) => (b['timestamp']?.toString() ?? '')
             .compareTo(a['timestamp']?.toString() ?? ''),

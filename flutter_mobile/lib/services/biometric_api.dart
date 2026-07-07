@@ -166,6 +166,36 @@ class BiometricApi {
   Future<List<Map<String, dynamic>>> fetchLatestMarks(String accessToken) async {
     final data = await _client.getJson('/asistencia', bearer: accessToken);
     if (data is! List) return [];
-    return data.whereType<Map<String, dynamic>>().toList();
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(_normalizeMarkRow)
+        .toList(growable: false);
+  }
+
+  /// El API móvil devuelve snake_case; la UI usa camelCase.
+  static Map<String, dynamic> _normalizeMarkRow(Map<String, dynamic> row) {
+    final empleadoId =
+        (row['empleadoId'] ?? row['empleado_id'])?.toString().trim() ?? '';
+    final tipo = (row['tipoEvento'] ?? row['tipo'])?.toString();
+    final timestamp = (row['timestamp'] ?? row['fecha_hora'])?.toString();
+    final metodo = row['metodo']?.toString();
+
+    final nombres = row['nombres']?.toString().trim() ?? '';
+    final apellidos = row['apellidos']?.toString().trim() ?? '';
+    final dni = row['dni']?.toString().trim() ?? '';
+    final nombre = '$nombres $apellidos'.trim();
+    final empleadoDisplay = [
+      if (nombre.isNotEmpty) nombre,
+      if (dni.isNotEmpty) '($dni)',
+    ].join(' ');
+
+    return {
+      ...row,
+      if (empleadoId.isNotEmpty) 'empleadoId': empleadoId,
+      if (tipo != null && tipo.isNotEmpty) 'tipoEvento': tipo,
+      if (timestamp != null && timestamp.isNotEmpty) 'timestamp': timestamp,
+      if (metodo != null && metodo.isNotEmpty) 'metodo': metodo,
+      if (empleadoDisplay.isNotEmpty) 'empleadoDisplay': empleadoDisplay,
+    };
   }
 }
